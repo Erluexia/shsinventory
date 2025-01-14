@@ -9,6 +9,124 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          entity_id: string
+          entity_type: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      item_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          description: string | null
+          id: string
+          item_id: string | null
+          new_quantity: number | null
+          new_status: Database["public"]["Enums"]["item_status"] | null
+          previous_quantity: number | null
+          previous_status: Database["public"]["Enums"]["item_status"] | null
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_id?: string | null
+          new_quantity?: number | null
+          new_status?: Database["public"]["Enums"]["item_status"] | null
+          previous_quantity?: number | null
+          previous_status?: Database["public"]["Enums"]["item_status"] | null
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_id?: string | null
+          new_quantity?: number | null
+          new_status?: Database["public"]["Enums"]["item_status"] | null
+          previous_quantity?: number | null
+          previous_status?: Database["public"]["Enums"]["item_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_history_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      items: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          quantity: number
+          room_id: string | null
+          status: Database["public"]["Enums"]["item_status"] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          quantity?: number
+          room_id?: string | null
+          status?: Database["public"]["Enums"]["item_status"] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          quantity?: number
+          room_id?: string | null
+          status?: Database["public"]["Enums"]["item_status"] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "items_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -33,6 +151,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rooms: {
+        Row: {
+          created_at: string
+          floor_number: number
+          id: string
+          room_number: string
+        }
+        Insert: {
+          created_at?: string
+          floor_number: number
+          id?: string
+          room_number: string
+        }
+        Update: {
+          created_at?: string
+          floor_number?: number
+          id?: string
+          room_number?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -42,6 +181,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "faculty" | "it_office" | "property_custodian"
+      item_status: "good" | "needs_maintenance" | "needs_replacement"
     }
     CompositeTypes: {
       [_ in never]: never
