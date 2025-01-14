@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, CheckCircle, WrenchIcon } from "lucide-react";
+import { AlertCircle, CheckCircle, Wrench } from "lucide-react";
 
 const RoomOverview = () => {
   const { roomId } = useParams();
@@ -48,7 +48,7 @@ const RoomOverview = () => {
       case "good":
         return <CheckCircle className="text-green-500" />;
       case "needs_maintenance":
-        return <WrenchIcon className="text-yellow-500" />;
+        return <Wrench className="text-yellow-500" />;
       case "needs_replacement":
         return <AlertCircle className="text-red-500" />;
       default:
@@ -93,9 +93,9 @@ const RoomOverview = () => {
                     <Badge
                       variant={
                         item.status === "good"
-                          ? "success"
+                          ? "default"
                           : item.status === "needs_maintenance"
-                          ? "warning"
+                          ? "secondary"
                           : "destructive"
                       }
                     >

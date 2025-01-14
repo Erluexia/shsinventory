@@ -7,7 +7,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, AlertTriangle, LayoutDashboard, Tool } from "lucide-react";
+import { ChevronDown, ChevronUp, AlertTriangle, LayoutDashboard, Wrench } from "lucide-react";
 
 export default function Dashboard() {
   const [openFloor, setOpenFloor] = useState<string | null>(null);
@@ -58,7 +58,7 @@ export default function Dashboard() {
 
           <Card className="p-6">
             <div className="flex items-center space-x-2">
-              <Tool className="h-5 w-5 text-yellow-500" />
+              <Wrench className="h-5 w-5 text-yellow-500" />
               <h3 className="text-lg font-semibold">Maintenance Required</h3>
             </div>
             <p className="text-3xl font-bold mt-2">{metrics.maintenanceItems}</p>

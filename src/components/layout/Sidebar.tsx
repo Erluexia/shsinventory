@@ -7,7 +7,7 @@ import {
   LogOut,
   User,
   AlertTriangle,
-  Tool,
+  Wrench,
 } from "lucide-react";
 import {
   Sidebar,
@@ -45,7 +45,7 @@ const menuItems = [
   },
   {
     title: "Maintenance",
-    icon: Tool,
+    icon: Wrench,
     path: "/maintenance",
   },
   {
