@@ -25,15 +25,15 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#0EA5E9",
+          DEFAULT: "#0EA5E9", // Sky blue
           foreground: "#FFFFFF",
         },
         secondary: {
-          DEFAULT: "#D3E4FD",
+          DEFAULT: "#D3E4FD", // Light sky blue
           foreground: "#0F172A",
         },
         accent: {
-          DEFAULT: "#33C3F0",
+          DEFAULT: "#33C3F0", // Bright sky blue
           foreground: "#FFFFFF",
         },
         destructive: {
