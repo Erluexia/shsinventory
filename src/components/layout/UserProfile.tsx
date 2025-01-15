@@ -28,8 +28,7 @@ export function UserProfile({ onLogout }: UserProfileProps) {
     width: 100,
     height: 100,
     x: 0,
-    y: 0,
-    aspect: 1
+    y: 0
   });
   const [profileData, setProfileData] = useState({
     username: "",
