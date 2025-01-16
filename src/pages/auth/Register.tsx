@@ -40,6 +40,10 @@ export default function Register() {
   }, [navigate]);
 
   const validateForm = () => {
+    if (!email || !password || !username || !role) {
+      setErrorMessage("All fields are required");
+      return false;
+    }
     if (password !== confirmPassword) {
       setErrorMessage("Passwords do not match");
       return false;
@@ -58,6 +62,8 @@ export default function Register() {
           return 'Invalid email or password format';
         case 422:
           return 'Email already registered';
+        case 500:
+          return 'Server error. Please try again later.';
         default:
           return error.message;
       }
@@ -74,18 +80,25 @@ export default function Register() {
     setIsLoading(true);
 
     try {
+      console.log("Attempting to sign up with:", { email, role, username });
+      
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            username,
-            role,
+            username: username,
+            role: role,
           },
         },
       });
 
-      if (signUpError) throw signUpError;
+      if (signUpError) {
+        console.error("Signup error:", signUpError);
+        throw signUpError;
+      }
+
+      console.log("Signup successful:", signUpData);
 
       toast({
         title: "Registration successful",
@@ -94,6 +107,7 @@ export default function Register() {
 
       navigate("/login");
     } catch (error: any) {
+      console.error("Registration error:", error);
       setErrorMessage(getErrorMessage(error));
       toast({
         variant: "destructive",
