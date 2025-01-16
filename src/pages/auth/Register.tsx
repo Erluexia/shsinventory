@@ -16,12 +16,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthError, AuthApiError } from "@supabase/supabase-js";
 
+type UserRole = "admin" | "faculty" | "it_office" | "property_custodian";
+
 export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
-  const [role, setRole] = useState<"admin" | "faculty" | "it_office" | "property_custodian">("faculty");
+  const [role, setRole] = useState<UserRole>("faculty");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -56,6 +58,8 @@ export default function Register() {
   };
 
   const getErrorMessage = (error: AuthError) => {
+    console.error("Detailed error:", error);
+    
     if (error instanceof AuthApiError) {
       switch (error.status) {
         case 400:
@@ -63,6 +67,9 @@ export default function Register() {
         case 422:
           return 'Email already registered';
         case 500:
+          if (error.message.includes("Database error")) {
+            return 'Error creating user profile. Please try again.';
+          }
           return 'Server error. Please try again later.';
         default:
           return error.message;
@@ -87,8 +94,9 @@ export default function Register() {
         password,
         options: {
           data: {
-            username: username,
-            role: role,
+            username,
+            role,
+            full_name: username, // Adding this to ensure profile creation works
           },
         },
       });
