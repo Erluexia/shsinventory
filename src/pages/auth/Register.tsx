@@ -91,8 +91,8 @@ export default function Register() {
         password,
         options: {
           data: {
-            role,
             username,
+            role,
           },
         },
       });
@@ -103,22 +103,6 @@ export default function Register() {
       }
 
       console.log("Signup successful:", signUpData);
-
-      // Create profile entry
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert([
-          {
-            id: signUpData.user?.id,
-            username,
-            role,
-          }
-        ], { onConflict: 'id' });
-
-      if (profileError) {
-        console.error("Profile creation error:", profileError);
-        throw profileError;
-      }
 
       toast({
         title: "Registration successful",
