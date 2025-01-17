@@ -67,10 +67,7 @@ export default function Register() {
         case 422:
           return 'Email already registered';
         case 500:
-          if (error.message.includes("Database error")) {
-            return 'Error creating user profile. Please try again.';
-          }
-          return 'Server error. Please try again later.';
+          return 'Error creating user profile. Please try again.';
         default:
           return error.message;
       }
@@ -94,9 +91,8 @@ export default function Register() {
         password,
         options: {
           data: {
-            username,
             role,
-            full_name: username, // Adding this to ensure profile creation works
+            username,
           },
         },
       });
@@ -107,6 +103,22 @@ export default function Register() {
       }
 
       console.log("Signup successful:", signUpData);
+
+      // Create profile entry
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert([
+          {
+            id: signUpData.user?.id,
+            username,
+            role,
+          }
+        ], { onConflict: 'id' });
+
+      if (profileError) {
+        console.error("Profile creation error:", profileError);
+        throw profileError;
+      }
 
       toast({
         title: "Registration successful",
@@ -214,7 +226,7 @@ export default function Register() {
             </div>
             <div>
               <Label htmlFor="role">Role</Label>
-              <Select value={role} onValueChange={(value: any) => setRole(value)}>
+              <Select value={role} onValueChange={(value: UserRole) => setRole(value)}>
                 <SelectTrigger className="w-full bg-white">
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
@@ -226,7 +238,11 @@ export default function Register() {
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              className="w-full bg-primary hover:bg-primary/90" 
+              disabled={isLoading}
+            >
               {isLoading ? "Creating account..." : "Create Account"}
             </Button>
           </form>
