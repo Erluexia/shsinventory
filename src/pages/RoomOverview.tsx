@@ -84,10 +84,8 @@ const RoomOverview = () => {
         .from("activity_logs")
         .select(`
           *,
-          user:user_id (
-            profile:profiles (
-              username
-            )
+          profiles!activity_logs_user_id_fkey (
+            username
           )
         `)
         .eq("entity_type", "item")
@@ -240,7 +238,7 @@ const RoomOverview = () => {
                 <TableBody>
                   {activityLogs?.map((log) => (
                     <TableRow key={log.id}>
-                      <TableCell>{log.user?.profile?.username || 'Unknown User'}</TableCell>
+                      <TableCell>{log.profiles?.username || 'Unknown User'}</TableCell>
                       <TableCell>{log.action}</TableCell>
                       <TableCell>
                         <pre className="text-sm">
