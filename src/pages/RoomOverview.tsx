@@ -71,16 +71,34 @@ const RoomOverview = () => {
   const { data: activityLogs, isLoading: isLoadingLogs } = useQuery({
     queryKey: ["activity-logs", roomId],
     queryFn: async () => {
+      const { data: items } = await supabase
+        .from("items")
+        .select("id")
+        .eq("room_id", roomId);
+
+      if (!items) return [];
+
+      const itemIds = items.map(item => item.id);
+
       const { data, error } = await supabase
         .from("activity_logs")
         .select(`
           *,
-          profiles (username)
+          user:user_id (
+            profile:profiles (
+              username
+            )
+          )
         `)
         .eq("entity_type", "item")
+        .in("entity_id", itemIds)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching activity logs:", error);
+        throw error;
+      }
+
       return data;
     },
   });
@@ -222,7 +240,7 @@ const RoomOverview = () => {
                 <TableBody>
                   {activityLogs?.map((log) => (
                     <TableRow key={log.id}>
-                      <TableCell>{log.profiles?.username}</TableCell>
+                      <TableCell>{log.user?.profile?.username || 'Unknown User'}</TableCell>
                       <TableCell>{log.action}</TableCell>
                       <TableCell>
                         <pre className="text-sm">
