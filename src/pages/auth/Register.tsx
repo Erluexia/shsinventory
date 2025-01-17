@@ -67,7 +67,7 @@ export default function Register() {
         case 422:
           return 'Email already registered';
         case 500:
-          return 'Error creating user profile. Please try again.';
+          return 'Error creating user. Please try again.';
         default:
           return error.message;
       }
@@ -91,8 +91,8 @@ export default function Register() {
         password,
         options: {
           data: {
-            username,
             role,
+            username,
           },
         },
       });
