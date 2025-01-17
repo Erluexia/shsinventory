@@ -46,6 +46,13 @@ export default function Register() {
       setErrorMessage("All fields are required");
       return false;
     }
+    
+    // Add email domain validation
+    if (!email.endsWith("@mcpi.edu.ph")) {
+      setErrorMessage("Only @mcpi.edu.ph email addresses are allowed");
+      return false;
+    }
+
     if (password !== confirmPassword) {
       setErrorMessage("Passwords do not match");
       return false;
@@ -139,12 +146,13 @@ export default function Register() {
 
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email (@mcpi.edu.ph)</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="username@mcpi.edu.ph"
                 required
                 className="bg-white"
               />
