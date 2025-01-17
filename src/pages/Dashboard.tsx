@@ -8,38 +8,65 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp, AlertTriangle, LayoutDashboard, Wrench } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Dashboard() {
   const [openFloor, setOpenFloor] = useState<string | null>(null);
-  const [metrics, setMetrics] = useState({
-    totalItems: 0,
-    maintenanceItems: 0,
-    lowStockItems: 0,
+  const navigate = useNavigate();
+
+  // Fetch metrics data
+  const { data: metrics, isLoading: isLoadingMetrics } = useQuery({
+    queryKey: ['dashboard-metrics'],
+    queryFn: async () => {
+      const { data: items, error } = await supabase
+        .from('items')
+        .select('id, status, quantity');
+      
+      if (error) throw error;
+
+      return {
+        totalItems: items.length,
+        maintenanceItems: items.filter(item => item.status === 'needs_maintenance').length,
+        lowStockItems: items.filter(item => item.quantity < 5).length,
+      };
+    },
   });
 
-  // Simulated floors and rooms data
+  // Simulated floors data - you can fetch this from your backend if needed
   const floors = [
     {
       name: "First Floor",
-      id: "first",
-      rooms: ["101", "102", "103", "104", "105", "106", "107", "108", "109"],
+      id: "1",
+      rooms: Array.from({ length: 9 }, (_, i) => `10${i + 1}`),
     },
     {
       name: "Second Floor",
-      id: "second",
-      rooms: ["201", "202", "203", "204", "205", "206", "207", "208", "209"],
+      id: "2",
+      rooms: Array.from({ length: 9 }, (_, i) => `20${i + 1}`),
     },
-    // Add more floors as needed
+    {
+      name: "Third Floor",
+      id: "3",
+      rooms: Array.from({ length: 9 }, (_, i) => `30${i + 1}`),
+    },
+    {
+      name: "Fourth Floor",
+      id: "4",
+      rooms: Array.from({ length: 9 }, (_, i) => `40${i + 1}`),
+    },
+    {
+      name: "Fifth Floor",
+      id: "5",
+      rooms: Array.from({ length: 9 }, (_, i) => `50${i + 1}`),
+    },
+    {
+      name: "Sixth Floor",
+      id: "6",
+      rooms: Array.from({ length: 9 }, (_, i) => `60${i + 1}`),
+    },
   ];
-
-  useEffect(() => {
-    // TODO: Fetch real metrics from your backend
-    setMetrics({
-      totalItems: 150,
-      maintenanceItems: 5,
-      lowStockItems: 3,
-    });
-  }, []);
 
   return (
     <DashboardLayout>
@@ -53,7 +80,9 @@ export default function Dashboard() {
               <LayoutDashboard className="h-5 w-5 text-primary" />
               <h3 className="text-lg font-semibold">Total Items</h3>
             </div>
-            <p className="text-3xl font-bold mt-2">{metrics.totalItems}</p>
+            <p className="text-3xl font-bold mt-2">
+              {isLoadingMetrics ? "..." : metrics?.totalItems}
+            </p>
           </Card>
 
           <Card className="p-6">
@@ -61,7 +90,9 @@ export default function Dashboard() {
               <Wrench className="h-5 w-5 text-yellow-500" />
               <h3 className="text-lg font-semibold">Maintenance Required</h3>
             </div>
-            <p className="text-3xl font-bold mt-2">{metrics.maintenanceItems}</p>
+            <p className="text-3xl font-bold mt-2">
+              {isLoadingMetrics ? "..." : metrics?.maintenanceItems}
+            </p>
           </Card>
 
           <Card className="p-6">
@@ -69,7 +100,9 @@ export default function Dashboard() {
               <AlertTriangle className="h-5 w-5 text-red-500" />
               <h3 className="text-lg font-semibold">Low Stock Alert</h3>
             </div>
-            <p className="text-3xl font-bold mt-2">{metrics.lowStockItems}</p>
+            <p className="text-3xl font-bold mt-2">
+              {isLoadingMetrics ? "..." : metrics?.lowStockItems}
+            </p>
           </Card>
         </div>
 
@@ -104,10 +137,7 @@ export default function Dashboard() {
                       key={room}
                       variant="outline"
                       className="w-full"
-                      onClick={() => {
-                        // TODO: Handle room selection
-                        console.log(`Selected room ${room}`);
-                      }}
+                      onClick={() => navigate(`/rooms/${room}`)}
                     >
                       Room {room}
                     </Button>
