@@ -21,14 +21,17 @@ const RoomOverview = () => {
   const { roomId } = useParams();
   const [activeTab, setActiveTab] = useState("inventory");
 
-  // Fetch room data with error handling
+  // Fetch room data with proper join
   const { data: room, isLoading: isLoadingRoom } = useQuery({
     queryKey: ["room", roomId],
     queryFn: async () => {
       console.log("Fetching room with number:", roomId);
       const { data, error } = await supabase
         .from("rooms")
-        .select("*, floor:floor_id(*)")
+        .select(`
+          *,
+          floor:floors(*)
+        `)
         .eq("room_number", roomId)
         .maybeSingle();
 
@@ -37,15 +40,10 @@ const RoomOverview = () => {
         throw error;
       }
 
-      if (!data) {
-        throw new Error(`Room ${roomId} not found`);
-      }
-
       return data;
     },
   });
 
-  // Fetch items for the room
   const { data: items, isLoading: isLoadingItems } = useQuery({
     queryKey: ["items", room?.id],
     queryFn: async () => {
@@ -149,6 +147,33 @@ const RoomOverview = () => {
     },
     enabled: !!room?.id,
   });
+
+  if (isLoadingRoom) {
+    return (
+      <DashboardLayout>
+        <div className="p-4">
+          <Skeleton className="h-8 w-48 mb-4" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!room) {
+    return (
+      <DashboardLayout>
+        <div className="p-4">
+          <div className="text-center">
+            <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Room Not Found</h2>
+            <p className="text-gray-600">
+              The room {roomId} could not be found. Please check the room number and try again.
+            </p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   const getStatusIcon = (status: string) => {
     switch (status) {

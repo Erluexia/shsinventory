@@ -179,6 +179,7 @@ export type Database = {
           floor_number: number
           id: string
           room_number: string
+          updated_at: string
         }
         Insert: {
           created_at?: string
@@ -186,6 +187,7 @@ export type Database = {
           floor_number: number
           id?: string
           room_number: string
+          updated_at?: string
         }
         Update: {
           created_at?: string
@@ -193,6 +195,7 @@ export type Database = {
           floor_number?: number
           id?: string
           room_number?: string
+          updated_at?: string
         }
         Relationships: [
           {

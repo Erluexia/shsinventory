@@ -9,6 +9,7 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Dashboard from "./pages/Dashboard";
 import RoomOverview from "./pages/RoomOverview";
+import Account from "./pages/Account";
 
 const queryClient = new QueryClient();
 
@@ -150,6 +151,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <RoomOverview />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/account"
+            element={
+              <ProtectedRoute>
+                <Account />
               </ProtectedRoute>
             }
           />

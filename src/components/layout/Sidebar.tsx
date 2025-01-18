@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, LogOut } from "lucide-react";
+import { Home, LogOut, User } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -130,7 +130,29 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <UserProfile onLogout={handleLogout} />
+        {/* User Profile Section */}
+        <div className="mt-auto p-4">
+          <div className="space-y-2">
+            <SidebarMenuButton
+              asChild
+              onClick={() => navigate("/account")}
+            >
+              <button className="w-full flex items-center space-x-2">
+                <User className="w-4 h-4" />
+                <span>Account Settings</span>
+              </button>
+            </SidebarMenuButton>
+            <SidebarMenuButton
+              asChild
+              onClick={handleLogout}
+            >
+              <button className="w-full flex items-center space-x-2">
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </button>
+            </SidebarMenuButton>
+          </div>
+        </div>
       </SidebarContent>
     </Sidebar>
   );
