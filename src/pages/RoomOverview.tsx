@@ -21,13 +21,14 @@ const RoomOverview = () => {
   const { roomId } = useParams();
   const [activeTab, setActiveTab] = useState("inventory");
 
+  // Fetch room data with error handling
   const { data: room, isLoading: isLoadingRoom } = useQuery({
     queryKey: ["room", roomId],
     queryFn: async () => {
       console.log("Fetching room with number:", roomId);
       const { data, error } = await supabase
         .from("rooms")
-        .select("*")
+        .select("*, floor:floor_id(*)")
         .eq("room_number", roomId)
         .maybeSingle();
 
@@ -35,11 +36,11 @@ const RoomOverview = () => {
         console.error("Error fetching room:", error);
         throw error;
       }
-      
+
       if (!data) {
         throw new Error(`Room ${roomId} not found`);
       }
-      
+
       return data;
     },
   });
@@ -49,7 +50,7 @@ const RoomOverview = () => {
     queryKey: ["items", room?.id],
     queryFn: async () => {
       if (!room?.id) return [];
-      
+
       console.log("Fetching items for room:", room.id);
       const { data, error } = await supabase
         .from("items")
@@ -65,7 +66,7 @@ const RoomOverview = () => {
     enabled: !!room?.id,
   });
 
-  // Fetch item history
+  // Fetch item history with proper joins
   const { data: itemHistory, isLoading: isLoadingHistory } = useQuery({
     queryKey: ["item-history", room?.id],
     queryFn: async () => {
@@ -76,7 +77,10 @@ const RoomOverview = () => {
         .from("item_history")
         .select(`
           *,
-          items (name)
+          items (
+            name,
+            room_id
+          )
         `)
         .eq("items.room_id", room.id);
 
@@ -111,12 +115,12 @@ const RoomOverview = () => {
 
       const itemIds = roomItems.map(item => item.id);
 
-      // Then get activity logs for these items with profile information
+      // Then get activity logs with profile information
       const { data, error } = await supabase
         .from("activity_logs")
         .select(`
           *,
-          profiles:user_id (
+          user:user_id (
             username,
             avatar_url
           )
@@ -284,7 +288,7 @@ const RoomOverview = () => {
                 <TableBody>
                   {activityLogs?.map((log) => (
                     <TableRow key={log.id}>
-                      <TableCell>{log.profiles?.username || 'Unknown User'}</TableCell>
+                      <TableCell>{log.user?.username || 'Unknown User'}</TableCell>
                       <TableCell>{log.action}</TableCell>
                       <TableCell>
                         <pre className="text-sm">
