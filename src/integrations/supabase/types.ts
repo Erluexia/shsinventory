@@ -178,7 +178,9 @@ export type Database = {
           floor_id: string
           floor_number: number
           id: string
+          previous_status: string | null
           room_number: string
+          status: string | null
           updated_at: string
         }
         Insert: {
@@ -186,7 +188,9 @@ export type Database = {
           floor_id: string
           floor_number: number
           id?: string
+          previous_status?: string | null
           room_number: string
+          status?: string | null
           updated_at?: string
         }
         Update: {
@@ -194,7 +198,9 @@ export type Database = {
           floor_id?: string
           floor_number?: number
           id?: string
+          previous_status?: string | null
           room_number?: string
+          status?: string | null
           updated_at?: string
         }
         Relationships: [

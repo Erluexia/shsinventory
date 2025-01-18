@@ -1,21 +1,15 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, CheckCircle, Wrench } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { RoomInventoryTab } from "@/components/rooms/RoomInventoryTab";
+import { RoomHistoryTab } from "@/components/rooms/RoomHistoryTab";
+import { RoomActivityTab } from "@/components/rooms/RoomActivityTab";
+import { RoomStatusBadge } from "@/components/rooms/RoomStatusBadge";
 
 const RoomOverview = () => {
   const { roomId } = useParams();
@@ -25,14 +19,14 @@ const RoomOverview = () => {
   const { data: room, isLoading: isLoadingRoom } = useQuery({
     queryKey: ["room", roomId],
     queryFn: async () => {
-      console.log("Fetching room with number:", roomId);
+      console.log("Fetching room with ID:", roomId);
       const { data, error } = await supabase
         .from("rooms")
         .select(`
           *,
           floor:floors(*)
         `)
-        .eq("room_number", roomId)
+        .eq("id", roomId)
         .maybeSingle();
 
       if (error) {
@@ -64,7 +58,6 @@ const RoomOverview = () => {
     enabled: !!room?.id,
   });
 
-  // Fetch item history with proper joins
   const { data: itemHistory, isLoading: isLoadingHistory } = useQuery({
     queryKey: ["item-history", room?.id],
     queryFn: async () => {
@@ -91,14 +84,12 @@ const RoomOverview = () => {
     enabled: !!room?.id,
   });
 
-  // Fetch activity logs with proper profile join
   const { data: activityLogs, isLoading: isLoadingLogs } = useQuery({
     queryKey: ["activity-logs", room?.id],
     queryFn: async () => {
       if (!room?.id) return [];
 
       console.log("Fetching activity logs for room:", room.id);
-      // First get all items in this room
       const { data: roomItems, error: itemsError } = await supabase
         .from("items")
         .select("id")
@@ -113,18 +104,6 @@ const RoomOverview = () => {
 
       const itemIds = roomItems.map(item => item.id);
 
-      type ActivityLog = {
-        id: string;
-        action: string;
-        details: any;
-        created_at: string;
-        profiles: {
-          username: string | null;
-          avatar_url: string | null;
-        } | null;
-      };
-
-      // Then get activity logs with profile information
       const { data, error } = await supabase
         .from("activity_logs")
         .select(`
@@ -136,7 +115,7 @@ const RoomOverview = () => {
         `)
         .eq("entity_type", "item")
         .in("entity_id", itemIds)
-        .order("created_at", { ascending: false }) as { data: ActivityLog[] | null, error: any };
+        .order("created_at", { ascending: false });
 
       if (error) {
         console.error("Error fetching activity logs:", error);
@@ -167,44 +146,8 @@ const RoomOverview = () => {
             <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Room Not Found</h2>
             <p className="text-gray-600">
-              The room {roomId} could not be found. Please check the room number and try again.
+              The room with ID {roomId} could not be found. Please check the room ID and try again.
             </p>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "good":
-        return <CheckCircle className="text-green-500" />;
-      case "needs_maintenance":
-        return <Wrench className="text-yellow-500" />;
-      case "needs_replacement":
-        return <AlertCircle className="text-red-500" />;
-      default:
-        return null;
-    }
-  };
-
-  if (isLoadingRoom || isLoadingItems) {
-    return (
-      <DashboardLayout>
-        <div className="p-4">
-          <Skeleton className="h-8 w-48 mb-4" />
-          <Skeleton className="h-64 w-full" />
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  if (!room) {
-    return (
-      <DashboardLayout>
-        <div className="p-4">
-          <div className="text-center text-red-500">
-            Room {roomId} not found
           </div>
         </div>
       </DashboardLayout>
@@ -214,9 +157,21 @@ const RoomOverview = () => {
   return (
     <DashboardLayout>
       <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">
-          Room {room?.room_number} (Floor {room?.floor_number})
-        </h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold">
+            Room {room?.room_number} (Floor {room?.floor_number})
+          </h1>
+          <div className="flex items-center gap-4">
+            {room.previous_status && (
+              <div className="text-sm text-gray-500">
+                Previous Status: <RoomStatusBadge status={room.previous_status as any} />
+              </div>
+            )}
+            <div>
+              Current Status: <RoomStatusBadge status={room.status as any} />
+            </div>
+          </div>
+        </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList>
@@ -225,120 +180,16 @@ const RoomOverview = () => {
             <TabsTrigger value="activity">Activity Log</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="inventory" className="space-y-4">
-            <div className="flex justify-end">
-              <Button>Add New Item</Button>
-            </div>
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Item Name</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {items?.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell>{item.description}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {getStatusIcon(item.status)}
-                          <Badge
-                            variant={
-                              item.status === "good"
-                                ? "default"
-                                : item.status === "needs_maintenance"
-                                ? "secondary"
-                                : "destructive"
-                            }
-                          >
-                            {item.status?.replace("_", " ")}
-                          </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
-                            Edit
-                          </Button>
-                          <Button variant="destructive" size="sm">
-                            Delete
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+          <TabsContent value="inventory">
+            <RoomInventoryTab items={items || []} />
           </TabsContent>
 
           <TabsContent value="history">
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Item</TableHead>
-                    <TableHead>Previous Status</TableHead>
-                    <TableHead>New Status</TableHead>
-                    <TableHead>Previous Quantity</TableHead>
-                    <TableHead>New Quantity</TableHead>
-                    <TableHead>Changed At</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {itemHistory?.map((history) => (
-                    <TableRow key={history.id}>
-                      <TableCell>{history.items?.name}</TableCell>
-                      <TableCell>{history.previous_status}</TableCell>
-                      <TableCell>{history.new_status}</TableCell>
-                      <TableCell>{history.previous_quantity}</TableCell>
-                      <TableCell>{history.new_quantity}</TableCell>
-                      <TableCell>
-                        {new Date(history.created_at).toLocaleString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <RoomHistoryTab itemHistory={itemHistory || []} />
           </TabsContent>
 
           <TabsContent value="activity">
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>Details</TableHead>
-                    <TableHead>Timestamp</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {activityLogs?.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell>{log.profiles?.username || 'Unknown User'}</TableCell>
-                      <TableCell>{log.action}</TableCell>
-                      <TableCell>
-                        <pre className="text-sm">
-                          {JSON.stringify(log.details, null, 2)}
-                        </pre>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(log.created_at).toLocaleString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <RoomActivityTab activityLogs={activityLogs || []} />
           </TabsContent>
         </Tabs>
       </div>
