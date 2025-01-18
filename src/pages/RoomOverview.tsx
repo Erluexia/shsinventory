@@ -89,7 +89,7 @@ const RoomOverview = () => {
     enabled: !!room?.id,
   });
 
-  // Fetch activity logs
+  // Fetch activity logs with proper profile join
   const { data: activityLogs, isLoading: isLoadingLogs } = useQuery({
     queryKey: ["activity-logs", room?.id],
     queryFn: async () => {
@@ -117,7 +117,8 @@ const RoomOverview = () => {
         .select(`
           *,
           profiles:user_id (
-            username
+            username,
+            avatar_url
           )
         `)
         .eq("entity_type", "item")
