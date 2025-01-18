@@ -27,7 +27,7 @@ const RoomOverview = () => {
       const { data, error } = await supabase
         .from("rooms")
         .select("*")
-        .eq("id", roomId)
+        .eq("room_number", roomId)
         .single();
 
       if (error) throw error;
@@ -37,48 +37,56 @@ const RoomOverview = () => {
 
   // Fetch items for the room
   const { data: items, isLoading: isLoadingItems } = useQuery({
-    queryKey: ["items", roomId],
+    queryKey: ["items", room?.id],
     queryFn: async () => {
+      if (!room?.id) return [];
+      
       const { data, error } = await supabase
         .from("items")
         .select("*")
-        .eq("room_id", roomId);
+        .eq("room_id", room.id);
 
       if (error) throw error;
       return data;
     },
+    enabled: !!room?.id,
   });
 
   // Fetch item history
   const { data: itemHistory, isLoading: isLoadingHistory } = useQuery({
-    queryKey: ["item-history", roomId],
+    queryKey: ["item-history", room?.id],
     queryFn: async () => {
+      if (!room?.id) return [];
+
       const { data, error } = await supabase
         .from("item_history")
         .select(`
           *,
           items (name)
         `)
-        .eq("items.room_id", roomId);
+        .eq("items.room_id", room.id);
 
       if (error) throw error;
       return data;
     },
+    enabled: !!room?.id,
   });
 
-  // Fetch activity logs with proper join to profiles
+  // Fetch activity logs
   const { data: activityLogs, isLoading: isLoadingLogs } = useQuery({
-    queryKey: ["activity-logs", roomId],
+    queryKey: ["activity-logs", room?.id],
     queryFn: async () => {
+      if (!room?.id) return [];
+
       // First get all items in this room
-      const { data: items } = await supabase
+      const { data: roomItems } = await supabase
         .from("items")
         .select("id")
-        .eq("room_id", roomId);
+        .eq("room_id", room.id);
 
-      if (!items) return [];
+      if (!roomItems?.length) return [];
 
-      const itemIds = items.map(item => item.id);
+      const itemIds = roomItems.map(item => item.id);
 
       // Then get activity logs for these items with profile information
       const { data, error } = await supabase
@@ -100,6 +108,7 @@ const RoomOverview = () => {
 
       return data;
     },
+    enabled: !!room?.id,
   });
 
   const getStatusIcon = (status: string) => {
@@ -173,7 +182,7 @@ const RoomOverview = () => {
                                 : "destructive"
                             }
                           >
-                            {item.status.replace("_", " ")}
+                            {item.status?.replace("_", " ")}
                           </Badge>
                         </div>
                       </TableCell>
