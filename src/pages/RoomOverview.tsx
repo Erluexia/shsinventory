@@ -115,6 +115,17 @@ const RoomOverview = () => {
 
       const itemIds = roomItems.map(item => item.id);
 
+      type ActivityLog = {
+        id: string;
+        action: string;
+        details: any;
+        created_at: string;
+        profiles: {
+          username: string | null;
+          avatar_url: string | null;
+        } | null;
+      };
+
       // Then get activity logs with profile information
       const { data, error } = await supabase
         .from("activity_logs")
@@ -127,14 +138,14 @@ const RoomOverview = () => {
         `)
         .eq("entity_type", "item")
         .in("entity_id", itemIds)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }) as { data: ActivityLog[] | null, error: any };
 
       if (error) {
         console.error("Error fetching activity logs:", error);
         throw error;
       }
 
-      return data;
+      return data || [];
     },
     enabled: !!room?.id,
   });
