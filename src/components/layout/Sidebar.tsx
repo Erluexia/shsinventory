@@ -1,14 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Home,
-  BookOpen,
-  Settings,
-  LogOut,
-  User,
-  AlertTriangle,
-  Wrench,
-} from "lucide-react";
+import { Home, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -19,38 +11,48 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "./UserProfile";
 
-const menuItems = [
+// Simulated floors data - matches the data from Dashboard
+const floors = [
   {
-    title: "Dashboard",
-    icon: Home,
-    path: "/dashboard",
+    name: "First Floor",
+    id: "1",
+    rooms: Array.from({ length: 9 }, (_, i) => `10${i + 1}`),
   },
   {
-    title: "Inventory",
-    icon: BookOpen,
-    path: "/inventory",
+    name: "Second Floor",
+    id: "2",
+    rooms: Array.from({ length: 9 }, (_, i) => `20${i + 1}`),
   },
   {
-    title: "Maintenance",
-    icon: Wrench,
-    path: "/maintenance",
+    name: "Third Floor",
+    id: "3",
+    rooms: Array.from({ length: 9 }, (_, i) => `30${i + 1}`),
   },
   {
-    title: "Alerts",
-    icon: AlertTriangle,
-    path: "/alerts",
+    name: "Fourth Floor",
+    id: "4",
+    rooms: Array.from({ length: 9 }, (_, i) => `40${i + 1}`),
+  },
+  {
+    name: "Fifth Floor",
+    id: "5",
+    rooms: Array.from({ length: 9 }, (_, i) => `50${i + 1}`),
+  },
+  {
+    name: "Sixth Floor",
+    id: "6",
+    rooms: Array.from({ length: 9 }, (_, i) => `60${i + 1}`),
   },
 ];
 
 export function AppSidebar() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [expandedFloor, setExpandedFloor] = useState<string | null>(null);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -71,21 +73,57 @@ export function AppSidebar() {
         <div className="p-4">
           <h1 className="text-xl font-bold text-primary">MCPI Inventory</h1>
         </div>
+        
+        {/* Navigation Group */}
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  onClick={() => navigate("/dashboard")}
+                >
+                  <button className="w-full">
+                    <Home className="w-4 h-4" />
+                    <span>Dashboard</span>
+                  </button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Floors Group */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Floors</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {floors.map((floor) => (
+                <SidebarMenuItem key={floor.id}>
                   <SidebarMenuButton
                     asChild
-                    onClick={() => navigate(item.path)}
+                    onClick={() => setExpandedFloor(expandedFloor === floor.id ? null : floor.id)}
                   >
                     <button className="w-full">
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
+                      <span>{floor.name}</span>
                     </button>
                   </SidebarMenuButton>
+                  {expandedFloor === floor.id && (
+                    <div className="ml-4 mt-2 space-y-1">
+                      {floor.rooms.map((room) => (
+                        <SidebarMenuButton
+                          key={room}
+                          asChild
+                          onClick={() => navigate(`/rooms/${room}`)}
+                        >
+                          <button className="w-full text-sm py-1">
+                            Room {room}
+                          </button>
+                        </SidebarMenuButton>
+                      ))}
+                    </div>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
