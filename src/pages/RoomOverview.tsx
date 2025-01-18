@@ -24,13 +24,22 @@ const RoomOverview = () => {
   const { data: room, isLoading: isLoadingRoom } = useQuery({
     queryKey: ["room", roomId],
     queryFn: async () => {
+      console.log("Fetching room with number:", roomId);
       const { data, error } = await supabase
         .from("rooms")
         .select("*")
         .eq("room_number", roomId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching room:", error);
+        throw error;
+      }
+      
+      if (!data) {
+        throw new Error(`Room ${roomId} not found`);
+      }
+      
       return data;
     },
   });
@@ -41,12 +50,16 @@ const RoomOverview = () => {
     queryFn: async () => {
       if (!room?.id) return [];
       
+      console.log("Fetching items for room:", room.id);
       const { data, error } = await supabase
         .from("items")
         .select("*")
         .eq("room_id", room.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching items:", error);
+        throw error;
+      }
       return data;
     },
     enabled: !!room?.id,
@@ -58,6 +71,7 @@ const RoomOverview = () => {
     queryFn: async () => {
       if (!room?.id) return [];
 
+      console.log("Fetching item history for room:", room.id);
       const { data, error } = await supabase
         .from("item_history")
         .select(`
@@ -66,7 +80,10 @@ const RoomOverview = () => {
         `)
         .eq("items.room_id", room.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching item history:", error);
+        throw error;
+      }
       return data;
     },
     enabled: !!room?.id,
@@ -78,11 +95,17 @@ const RoomOverview = () => {
     queryFn: async () => {
       if (!room?.id) return [];
 
+      console.log("Fetching activity logs for room:", room.id);
       // First get all items in this room
-      const { data: roomItems } = await supabase
+      const { data: roomItems, error: itemsError } = await supabase
         .from("items")
         .select("id")
         .eq("room_id", room.id);
+
+      if (itemsError) {
+        console.error("Error fetching room items:", itemsError);
+        throw itemsError;
+      }
 
       if (!roomItems?.length) return [];
 
@@ -93,7 +116,7 @@ const RoomOverview = () => {
         .from("activity_logs")
         .select(`
           *,
-          profiles (
+          profiles:user_id (
             username
           )
         `)
@@ -130,6 +153,18 @@ const RoomOverview = () => {
         <div className="p-4">
           <Skeleton className="h-8 w-48 mb-4" />
           <Skeleton className="h-64 w-full" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!room) {
+    return (
+      <DashboardLayout>
+        <div className="p-4">
+          <div className="text-center text-red-500">
+            Room {roomId} not found
+          </div>
         </div>
       </DashboardLayout>
     );
