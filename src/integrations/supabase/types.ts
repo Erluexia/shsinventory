@@ -39,6 +39,27 @@ export type Database = {
         }
         Relationships: []
       }
+      floors: {
+        Row: {
+          created_at: string
+          floor_number: number
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          floor_number: number
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          floor_number?: number
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       item_history: {
         Row: {
           changed_by: string | null
@@ -154,23 +175,34 @@ export type Database = {
       rooms: {
         Row: {
           created_at: string
+          floor_id: string
           floor_number: number
           id: string
           room_number: string
         }
         Insert: {
           created_at?: string
+          floor_id: string
           floor_number: number
           id?: string
           room_number: string
         }
         Update: {
           created_at?: string
+          floor_id?: string
           floor_number?: number
           id?: string
           room_number?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "rooms_floor_id_fkey"
+            columns: ["floor_id"]
+            isOneToOne: false
+            referencedRelation: "floors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
