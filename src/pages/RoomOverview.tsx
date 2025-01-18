@@ -21,7 +21,6 @@ const RoomOverview = () => {
   const { roomId } = useParams();
   const [activeTab, setActiveTab] = useState("inventory");
 
-  // Fetch room data
   const { data: room, isLoading: isLoadingRoom } = useQuery({
     queryKey: ["room", roomId],
     queryFn: async () => {
@@ -67,10 +66,11 @@ const RoomOverview = () => {
     },
   });
 
-  // Fetch activity logs
+  // Fetch activity logs with proper join to profiles
   const { data: activityLogs, isLoading: isLoadingLogs } = useQuery({
     queryKey: ["activity-logs", roomId],
     queryFn: async () => {
+      // First get all items in this room
       const { data: items } = await supabase
         .from("items")
         .select("id")
@@ -80,11 +80,12 @@ const RoomOverview = () => {
 
       const itemIds = items.map(item => item.id);
 
+      // Then get activity logs for these items with profile information
       const { data, error } = await supabase
         .from("activity_logs")
         .select(`
           *,
-          profiles!activity_logs_user_id_fkey (
+          profiles (
             username
           )
         `)
