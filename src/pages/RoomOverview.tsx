@@ -19,14 +19,14 @@ const RoomOverview = () => {
   const { data: room, isLoading: isLoadingRoom } = useQuery({
     queryKey: ["room", roomId],
     queryFn: async () => {
-      console.log("Fetching room with ID:", roomId);
+      console.log("Fetching room with number:", roomId);
       const { data, error } = await supabase
         .from("rooms")
         .select(`
           *,
           floor:floors(*)
         `)
-        .eq("id", roomId)
+        .eq("room_number", roomId)
         .maybeSingle();
 
       if (error) {
@@ -146,7 +146,7 @@ const RoomOverview = () => {
             <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Room Not Found</h2>
             <p className="text-gray-600">
-              The room with ID {roomId} could not be found. Please check the room ID and try again.
+              The room {roomId} could not be found. Please check the room number and try again.
             </p>
           </div>
         </div>
@@ -159,7 +159,7 @@ const RoomOverview = () => {
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold">
-            Room {room?.room_number} (Floor {room?.floor_number})
+            Room {room?.room_number} (Floor {room?.floor?.floor_number})
           </h1>
           <div className="flex items-center gap-4">
             {room.previous_status && (
