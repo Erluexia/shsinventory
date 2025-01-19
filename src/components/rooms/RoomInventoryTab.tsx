@@ -26,10 +26,8 @@ export const RoomInventoryTab = ({ items, roomId }: { items: any[]; roomId: stri
   const handleConfirmDelete = async () => {
     if (!selectedItem) return;
     
-    const success = await handleDeleteItem(selectedItem.id);
-    if (success) {
-      setIsDeleteDialogOpen(false);
-    }
+    await handleDeleteItem(selectedItem.id);
+    setIsDeleteDialogOpen(false);
   };
 
   return (
@@ -47,14 +45,18 @@ export const RoomInventoryTab = ({ items, roomId }: { items: any[]; roomId: stri
       <ItemFormDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
-        onSubmit={handleCreateItem}
+        onSubmit={async (values) => {
+          await handleCreateItem(values);
+        }}
         mode="create"
       />
 
       <ItemFormDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
-        onSubmit={(values) => handleEditItem(selectedItem?.id, values)}
+        onSubmit={async (values) => {
+          await handleEditItem(selectedItem?.id, values);
+        }}
         initialValues={selectedItem}
         mode="edit"
       />

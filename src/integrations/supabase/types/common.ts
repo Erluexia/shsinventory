@@ -1,3 +1,5 @@
+import { ActivityLogs, Floors, ItemHistory, Items, Profiles, Rooms } from './tables';
+
 export type Json =
   | string
   | number
