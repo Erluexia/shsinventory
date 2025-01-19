@@ -15,37 +15,37 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "./UserProfile";
 
-// Simulated floors data - matches the data from Dashboard
+// Updated floors data to remove specific room numbers
 const floors = [
   {
     name: "First Floor",
     id: "1",
-    rooms: Array.from({ length: 9 }, (_, i) => `10${i + 1}`),
+    rooms: Array.from({ length: 8 }, (_, i) => `10${i + 2}`),
   },
   {
     name: "Second Floor",
     id: "2",
-    rooms: Array.from({ length: 9 }, (_, i) => `20${i + 1}`),
+    rooms: Array.from({ length: 8 }, (_, i) => `20${i + 2}`),
   },
   {
     name: "Third Floor",
     id: "3",
-    rooms: Array.from({ length: 9 }, (_, i) => `30${i + 1}`),
+    rooms: Array.from({ length: 8 }, (_, i) => `30${i + 2}`),
   },
   {
     name: "Fourth Floor",
     id: "4",
-    rooms: Array.from({ length: 9 }, (_, i) => `40${i + 1}`),
+    rooms: Array.from({ length: 8 }, (_, i) => `40${i + 2}`),
   },
   {
     name: "Fifth Floor",
     id: "5",
-    rooms: Array.from({ length: 9 }, (_, i) => `50${i + 1}`),
+    rooms: Array.from({ length: 8 }, (_, i) => `50${i + 2}`),
   },
   {
     name: "Sixth Floor",
     id: "6",
-    rooms: Array.from({ length: 9 }, (_, i) => `60${i + 1}`),
+    rooms: Array.from({ length: 8 }, (_, i) => `60${i + 2}`),
   },
 ];
 

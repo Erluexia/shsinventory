@@ -6,6 +6,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Edit, Trash2 } from "lucide-react";
 
 interface ItemTableProps {
   items: any[];
@@ -21,7 +23,8 @@ export const ItemTable = ({ items }: ItemTableProps) => {
         quantities.set(item.name, {
           total: 0,
           needs_maintenance: 0,
-          needs_replacement: 0
+          needs_replacement: 0,
+          id: item.id
         });
       }
       
@@ -50,6 +53,7 @@ export const ItemTable = ({ items }: ItemTableProps) => {
             <TableHead>Total Quantity</TableHead>
             <TableHead>Needs Maintenance (Quantity)</TableHead>
             <TableHead>Needs Replacement (Quantity)</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -62,6 +66,14 @@ export const ItemTable = ({ items }: ItemTableProps) => {
               </TableCell>
               <TableCell>
                 {quantities.needs_replacement > 0 ? `${quantities.needs_replacement} items` : 'None'}
+              </TableCell>
+              <TableCell className="text-right space-x-2">
+                <Button variant="ghost" size="icon">
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </TableCell>
             </TableRow>
           ))}
