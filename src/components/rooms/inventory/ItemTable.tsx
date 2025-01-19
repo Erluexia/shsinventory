@@ -6,82 +6,58 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle, Wrench } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case "good":
-      return <CheckCircle className="text-green-500" />;
-    case "needs_maintenance":
-      return <Wrench className="text-yellow-500" />;
-    case "needs_replacement":
-      return <AlertCircle className="text-red-500" />;
-    default:
-      return null;
-  }
-};
 
 interface ItemTableProps {
   items: any[];
-  onEdit: (item: any) => void;
-  onDelete: (item: any) => void;
 }
 
-export const ItemTable = ({ items, onEdit, onDelete }: ItemTableProps) => {
+export const ItemTable = ({ items }: ItemTableProps) => {
+  // Calculate quantities for each item
+  const getItemQuantities = (items: any[]) => {
+    const quantities = new Map();
+    
+    items.forEach(item => {
+      if (!quantities.has(item.name)) {
+        quantities.set(item.name, {
+          total: 0,
+          needs_maintenance: 0,
+          needs_replacement: 0
+        });
+      }
+      
+      const current = quantities.get(item.name);
+      current.total += item.quantity;
+      if (item.status === 'needs_maintenance') {
+        current.needs_maintenance += item.quantity;
+      } else if (item.status === 'needs_replacement') {
+        current.needs_replacement += item.quantity;
+      }
+    });
+    
+    return quantities;
+  };
+
+  const itemQuantities = getItemQuantities(items);
+  const uniqueItems = Array.from(itemQuantities.entries());
+
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Item Name</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Quantity</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead>Total Quantity</TableHead>
+            <TableHead>Needs Maintenance</TableHead>
+            <TableHead>Needs Replacement</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {items?.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell className="font-medium">{item.name}</TableCell>
-              <TableCell>{item.description}</TableCell>
-              <TableCell>{item.quantity}</TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(item.status)}
-                  <Badge
-                    variant={
-                      item.status === "good"
-                        ? "default"
-                        : item.status === "needs_maintenance"
-                        ? "secondary"
-                        : "destructive"
-                    }
-                  >
-                    {item.status?.replace("_", " ")}
-                  </Badge>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onEdit(item)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => onDelete(item)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </TableCell>
+          {uniqueItems.map(([name, quantities]) => (
+            <TableRow key={name}>
+              <TableCell className="font-medium">{name}</TableCell>
+              <TableCell>{quantities.total}</TableCell>
+              <TableCell>{quantities.needs_maintenance}</TableCell>
+              <TableCell>{quantities.needs_replacement}</TableCell>
             </TableRow>
           ))}
         </TableBody>

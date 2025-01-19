@@ -27,12 +27,11 @@ import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
 
 const itemFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
-  quantity: z.number().min(0, "Quantity must be 0 or greater"),
+  quantity: z.number().min(1, "Quantity must be at least 1"),
   status: z.enum(["good", "needs_maintenance", "needs_replacement"]),
 });
 
@@ -42,35 +41,37 @@ interface ItemFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: ItemFormValues) => Promise<void>;
-  initialValues?: Partial<ItemFormValues>;
-  mode: "create" | "edit";
+  mode: "create";
 }
 
 export function ItemFormDialog({
   open,
   onOpenChange,
   onSubmit,
-  initialValues,
   mode,
 }: ItemFormDialogProps) {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const form = useForm<ItemFormValues>({
     resolver: zodResolver(itemFormSchema),
     defaultValues: {
-      name: initialValues?.name || "",
-      description: initialValues?.description || "",
-      quantity: initialValues?.quantity || 1,
-      status: initialValues?.status || "good",
+      name: "",
+      quantity: 1,
+      status: "good",
     },
   });
 
   const handleSubmit = async (values: ItemFormValues) => {
+    if (isSubmitting) return;
+    
     try {
+      setIsSubmitting(true);
       await onSubmit(values);
       form.reset();
       onOpenChange(false);
       toast({
-        title: `Item ${mode === "create" ? "created" : "updated"} successfully`,
+        title: "Item created successfully",
       });
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -79,6 +80,8 @@ export function ItemFormDialog({
         description: "Failed to save item. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -86,13 +89,9 @@ export function ItemFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>
-            {mode === "create" ? "Add New Item" : "Edit Item"}
-          </DialogTitle>
+          <DialogTitle>Add New Item</DialogTitle>
           <DialogDescription>
-            {mode === "create"
-              ? "Add a new item to this room's inventory"
-              : "Update the item's details"}
+            Add a new item to this room's inventory
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -112,22 +111,6 @@ export function ItemFormDialog({
             />
             <FormField
               control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Item description (optional)"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
               name="quantity"
               render={({ field }) => (
                 <FormItem>
@@ -135,6 +118,7 @@ export function ItemFormDialog({
                   <FormControl>
                     <Input
                       type="number"
+                      min="1"
                       {...field}
                       onChange={(e) => field.onChange(Number(e.target.value))}
                     />
@@ -173,8 +157,8 @@ export function ItemFormDialog({
               )}
             />
             <DialogFooter>
-              <Button type="submit">
-                {mode === "create" ? "Create" : "Update"}
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Creating..." : "Create"}
               </Button>
             </DialogFooter>
           </form>
