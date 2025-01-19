@@ -27,6 +27,7 @@ export const ItemTable = ({ items }: ItemTableProps) => {
       
       const current = quantities.get(item.name);
       current.total += item.quantity;
+      
       if (item.status === 'needs_maintenance') {
         current.needs_maintenance += item.quantity;
       } else if (item.status === 'needs_replacement') {
@@ -47,8 +48,8 @@ export const ItemTable = ({ items }: ItemTableProps) => {
           <TableRow>
             <TableHead>Item Name</TableHead>
             <TableHead>Total Quantity</TableHead>
-            <TableHead>Needs Maintenance</TableHead>
-            <TableHead>Needs Replacement</TableHead>
+            <TableHead>Needs Maintenance (Quantity)</TableHead>
+            <TableHead>Needs Replacement (Quantity)</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -56,8 +57,12 @@ export const ItemTable = ({ items }: ItemTableProps) => {
             <TableRow key={name}>
               <TableCell className="font-medium">{name}</TableCell>
               <TableCell>{quantities.total}</TableCell>
-              <TableCell>{quantities.needs_maintenance}</TableCell>
-              <TableCell>{quantities.needs_replacement}</TableCell>
+              <TableCell>
+                {quantities.needs_maintenance > 0 ? `${quantities.needs_maintenance} items` : 'None'}
+              </TableCell>
+              <TableCell>
+                {quantities.needs_replacement > 0 ? `${quantities.needs_replacement} items` : 'None'}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
