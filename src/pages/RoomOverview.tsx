@@ -15,7 +15,6 @@ const RoomOverview = () => {
   const { roomId } = useParams();
   const [activeTab, setActiveTab] = useState("inventory");
 
-  // Fetch room data with proper join
   const { data: room, isLoading: isLoadingRoom } = useQuery({
     queryKey: ["room", roomId],
     queryFn: async () => {
@@ -181,7 +180,7 @@ const RoomOverview = () => {
           </TabsList>
 
           <TabsContent value="inventory">
-            <RoomInventoryTab items={items || []} />
+            <RoomInventoryTab items={items || []} roomId={room.id} />
           </TabsContent>
 
           <TabsContent value="history">
