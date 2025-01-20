@@ -16,13 +16,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -34,7 +27,6 @@ const itemFormSchema = z.object({
   quantity: z.number().min(1, "Quantity must be at least 1"),
   maintenance_quantity: z.number().min(0, "Maintenance quantity cannot be negative"),
   replacement_quantity: z.number().min(0, "Replacement quantity cannot be negative"),
-  status: z.enum(["good", "needs_maintenance", "needs_replacement"]),
 });
 
 type ItemFormValues = z.infer<typeof itemFormSchema>;
@@ -62,7 +54,6 @@ export function ItemFormDialog({
       quantity: 1,
       maintenance_quantity: 0,
       replacement_quantity: 0,
-      status: "good",
     },
   });
 
@@ -113,55 +104,24 @@ export function ItemFormDialog({
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="quantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Total Quantity</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="1"
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="good">Good</SelectItem>
-                        <SelectItem value="needs_maintenance">
-                          Needs Maintenance
-                        </SelectItem>
-                        <SelectItem value="needs_replacement">
-                          Needs Replacement
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="quantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Total Quantity</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="1"
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}

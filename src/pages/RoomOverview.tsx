@@ -8,7 +8,6 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useState } from "react";
 import { RoomInventoryTab } from "@/components/rooms/RoomInventoryTab";
 import { RoomActivityTab } from "@/components/rooms/RoomActivityTab";
-import { RoomStatusBadge } from "@/components/rooms/RoomStatusBadge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const RoomOverview = () => {
@@ -110,7 +109,6 @@ const RoomOverview = () => {
       <DashboardLayout>
         <div className="p-4 space-y-4">
           <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-8 w-32" />
           <div className="grid gap-4">
             <Skeleton className="h-64 w-full" />
           </div>
@@ -154,32 +152,11 @@ const RoomOverview = () => {
   return (
     <DashboardLayout>
       <div className="p-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4">
           <h1 className="text-2xl font-bold">
             Room {room?.room_number} (Floor {room?.floor?.floor_number})
           </h1>
-          <div className="flex items-center gap-4">
-            {room.previous_status && (
-              <div className="text-sm text-gray-500">
-                Previous Status: <RoomStatusBadge status={room.previous_status as any} />
-              </div>
-            )}
-            <div>
-              Current Status: <RoomStatusBadge status={room.status as any} />
-            </div>
-          </div>
         </div>
-
-        {(itemsError || logsError) && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>
-              {itemsError ? "Failed to load items." : "Failed to load activity logs."}
-              Please try again later.
-            </AlertDescription>
-          </Alert>
-        )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList>

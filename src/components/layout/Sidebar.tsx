@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, LogOut, User } from "lucide-react";
+import { Home, LogOut, User, Menu } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -10,10 +10,13 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "./UserProfile";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 // Updated floors data to remove specific room numbers
 const floors = [
@@ -53,6 +56,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [expandedFloor, setExpandedFloor] = useState<string | null>(null);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -67,93 +71,124 @@ export function AppSidebar() {
     }
   };
 
-  return (
-    <Sidebar>
-      <SidebarContent>
-        <div className="p-4">
-          <h1 className="text-xl font-bold text-primary">MCPI Inventory</h1>
-        </div>
-        
-        {/* Navigation Group */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
+  const SidebarContent = () => (
+    <>
+      <div className="p-4">
+        <h1 className="text-xl font-bold text-primary">MCPI Inventory</h1>
+      </div>
+      
+      {/* Navigation Group */}
+      <SidebarGroup>
+        <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                onClick={() => navigate("/dashboard")}
+              >
+                <button className="w-full">
+                  <Home className="w-4 h-4" />
+                  <span>Dashboard</span>
+                </button>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+
+      {/* Floors Group */}
+      <SidebarGroup className="flex-1 overflow-y-auto">
+        <SidebarGroupLabel>Floors</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {floors.map((floor) => (
+              <SidebarMenuItem key={floor.id}>
                 <SidebarMenuButton
                   asChild
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => setExpandedFloor(expandedFloor === floor.id ? null : floor.id)}
                 >
                   <button className="w-full">
-                    <Home className="w-4 h-4" />
-                    <span>Dashboard</span>
+                    <span>{floor.name}</span>
                   </button>
                 </SidebarMenuButton>
+                {expandedFloor === floor.id && (
+                  <div className="ml-4 mt-2 space-y-1">
+                    {floor.rooms.map((room) => (
+                      <SidebarMenuButton
+                        key={room}
+                        asChild
+                        onClick={() => {
+                          navigate(`/rooms/${room}`);
+                          setIsMobileOpen(false);
+                        }}
+                      >
+                        <button className="w-full text-sm py-1">
+                          Room {room}
+                        </button>
+                      </SidebarMenuButton>
+                    ))}
+                  </div>
+                )}
               </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
 
-        {/* Floors Group */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Floors</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {floors.map((floor) => (
-                <SidebarMenuItem key={floor.id}>
-                  <SidebarMenuButton
-                    asChild
-                    onClick={() => setExpandedFloor(expandedFloor === floor.id ? null : floor.id)}
-                  >
-                    <button className="w-full">
-                      <span>{floor.name}</span>
-                    </button>
-                  </SidebarMenuButton>
-                  {expandedFloor === floor.id && (
-                    <div className="ml-4 mt-2 space-y-1">
-                      {floor.rooms.map((room) => (
-                        <SidebarMenuButton
-                          key={room}
-                          asChild
-                          onClick={() => navigate(`/rooms/${room}`)}
-                        >
-                          <button className="w-full text-sm py-1">
-                            Room {room}
-                          </button>
-                        </SidebarMenuButton>
-                      ))}
-                    </div>
-                  )}
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* User Profile Section */}
-        <div className="mt-auto p-4">
-          <div className="space-y-2">
-            <SidebarMenuButton
-              asChild
-              onClick={() => navigate("/account")}
-            >
-              <button className="w-full flex items-center space-x-2">
-                <User className="w-4 h-4" />
-                <span>Account Settings</span>
-              </button>
-            </SidebarMenuButton>
-            <SidebarMenuButton
-              asChild
-              onClick={handleLogout}
-            >
-              <button className="w-full flex items-center space-x-2">
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
-              </button>
-            </SidebarMenuButton>
-          </div>
+      {/* User Profile Section - Fixed at bottom */}
+      <div className="mt-auto border-t p-4 bg-background">
+        <div className="space-y-2">
+          <SidebarMenuButton
+            asChild
+            onClick={() => navigate("/account")}
+          >
+            <button className="w-full flex items-center space-x-2">
+              <User className="w-4 h-4" />
+              <span>Account Settings</span>
+            </button>
+          </SidebarMenuButton>
+          <SidebarMenuButton
+            asChild
+            onClick={handleLogout}
+          >
+            <button className="w-full flex items-center space-x-2">
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </button>
+          </SidebarMenuButton>
         </div>
+      </div>
+    </>
+  );
+
+  // Mobile sidebar
+  const mobileSidebar = (
+    <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="md:hidden">
+          <Menu className="h-5 w-5" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="p-0 w-72">
+        <SidebarContent />
+      </SheetContent>
+    </Sheet>
+  );
+
+  // Desktop sidebar
+  const desktopSidebar = (
+    <Sidebar className="hidden md:flex">
+      <SidebarContent>
+        <SidebarContent />
       </SidebarContent>
     </Sidebar>
+  );
+
+  return (
+    <>
+      {mobileSidebar}
+      {desktopSidebar}
+    </>
   );
 }
