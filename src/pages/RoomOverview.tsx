@@ -9,12 +9,13 @@ import { useState } from "react";
 import { RoomInventoryTab } from "@/components/rooms/RoomInventoryTab";
 import { RoomActivityTab } from "@/components/rooms/RoomActivityTab";
 import { RoomStatusBadge } from "@/components/rooms/RoomStatusBadge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const RoomOverview = () => {
   const { roomId } = useParams();
   const [activeTab, setActiveTab] = useState("inventory");
 
-  const { data: room, isLoading: isLoadingRoom } = useQuery({
+  const { data: room, isLoading: isLoadingRoom, error: roomError } = useQuery({
     queryKey: ["room", roomId],
     queryFn: async () => {
       console.log("Fetching room with number:", roomId);
@@ -32,11 +33,15 @@ const RoomOverview = () => {
         throw error;
       }
 
+      if (!data) {
+        throw new Error("Room not found");
+      }
+
       return data;
     },
   });
 
-  const { data: items, isLoading: isLoadingItems } = useQuery({
+  const { data: items, isLoading: isLoadingItems, error: itemsError } = useQuery({
     queryKey: ["items", room?.id],
     queryFn: async () => {
       if (!room?.id) return [];
@@ -45,7 +50,8 @@ const RoomOverview = () => {
       const { data, error } = await supabase
         .from("items")
         .select("*")
-        .eq("room_id", room.id);
+        .eq("room_id", room.id)
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error("Error fetching items:", error);
@@ -56,7 +62,7 @@ const RoomOverview = () => {
     enabled: !!room?.id,
   });
 
-  const { data: activityLogs, isLoading: isLoadingLogs } = useQuery({
+  const { data: activityLogs, isLoading: isLoadingLogs, error: logsError } = useQuery({
     queryKey: ["activity-logs", room?.id],
     queryFn: async () => {
       if (!room?.id) return [];
@@ -102,9 +108,28 @@ const RoomOverview = () => {
   if (isLoadingRoom) {
     return (
       <DashboardLayout>
+        <div className="p-4 space-y-4">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-8 w-32" />
+          <div className="grid gap-4">
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (roomError) {
+    return (
+      <DashboardLayout>
         <div className="p-4">
-          <Skeleton className="h-8 w-48 mb-4" />
-          <Skeleton className="h-64 w-full" />
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              Failed to load room information. Please try again later.
+            </AlertDescription>
+          </Alert>
         </div>
       </DashboardLayout>
     );
@@ -114,13 +139,13 @@ const RoomOverview = () => {
     return (
       <DashboardLayout>
         <div className="p-4">
-          <div className="text-center">
-            <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Room Not Found</h2>
-            <p className="text-gray-600">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Room Not Found</AlertTitle>
+            <AlertDescription>
               The room {roomId} could not be found. Please check the room number and try again.
-            </p>
-          </div>
+            </AlertDescription>
+          </Alert>
         </div>
       </DashboardLayout>
     );
@@ -145,6 +170,17 @@ const RoomOverview = () => {
           </div>
         </div>
 
+        {(itemsError || logsError) && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {itemsError ? "Failed to load items." : "Failed to load activity logs."}
+              Please try again later.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList>
             <TabsTrigger value="inventory">Inventory</TabsTrigger>
@@ -152,11 +188,18 @@ const RoomOverview = () => {
           </TabsList>
 
           <TabsContent value="inventory">
-            <RoomInventoryTab items={items || []} roomId={room.id} />
+            <RoomInventoryTab 
+              items={items || []} 
+              roomId={room.id} 
+              isLoading={isLoadingItems}
+            />
           </TabsContent>
 
           <TabsContent value="activity">
-            <RoomActivityTab activityLogs={activityLogs || []} />
+            <RoomActivityTab 
+              activityLogs={activityLogs || []} 
+              isLoading={isLoadingLogs}
+            />
           </TabsContent>
         </Tabs>
       </div>

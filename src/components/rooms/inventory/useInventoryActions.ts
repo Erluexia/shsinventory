@@ -9,6 +9,26 @@ export const useInventoryActions = (roomId: string) => {
   const handleCreateItem = async (values: any) => {
     try {
       console.log("Creating item with values:", values);
+      
+      // Validate input
+      if (!values.name?.trim()) {
+        toast({
+          title: "Error",
+          description: "Item name is required",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      if (values.quantity < 1) {
+        toast({
+          title: "Error",
+          description: "Quantity must be at least 1",
+          variant: "destructive",
+        });
+        return false;
+      }
+
       const { error } = await supabase
         .from("items")
         .insert([{ 
@@ -18,15 +38,29 @@ export const useInventoryActions = (roomId: string) => {
           replacement_quantity: values.replacement_quantity || 0
         }]);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating item:", error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to create item",
+          variant: "destructive",
+        });
+        return false;
+      }
 
-      queryClient.invalidateQueries({ queryKey: ["items", roomId] });
+      await queryClient.invalidateQueries({ queryKey: ["items", roomId] });
+      await queryClient.invalidateQueries({ queryKey: ["activity-logs", roomId] });
+      
+      toast({
+        title: "Success",
+        description: "Item created successfully",
+      });
       return true;
     } catch (error) {
       console.error("Error creating item:", error);
       toast({
         title: "Error",
-        description: "Failed to create item",
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
       return false;
@@ -36,6 +70,26 @@ export const useInventoryActions = (roomId: string) => {
   const handleEditItem = async (itemId: string, values: any) => {
     try {
       console.log("Editing item with values:", values);
+      
+      // Validate input
+      if (!values.name?.trim()) {
+        toast({
+          title: "Error",
+          description: "Item name is required",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      if (values.quantity < 1) {
+        toast({
+          title: "Error",
+          description: "Quantity must be at least 1",
+          variant: "destructive",
+        });
+        return false;
+      }
+
       const { error } = await supabase
         .from("items")
         .update({
@@ -45,16 +99,29 @@ export const useInventoryActions = (roomId: string) => {
         })
         .eq("id", itemId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating item:", error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to update item",
+          variant: "destructive",
+        });
+        return false;
+      }
 
-      queryClient.invalidateQueries({ queryKey: ["items", roomId] });
-      toast({ title: "Item updated successfully" });
+      await queryClient.invalidateQueries({ queryKey: ["items", roomId] });
+      await queryClient.invalidateQueries({ queryKey: ["activity-logs", roomId] });
+      
+      toast({ 
+        title: "Success",
+        description: "Item updated successfully" 
+      });
       return true;
     } catch (error) {
       console.error("Error updating item:", error);
       toast({
         title: "Error",
-        description: "Failed to update item",
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
       return false;
@@ -69,16 +136,29 @@ export const useInventoryActions = (roomId: string) => {
         .delete()
         .eq("id", itemId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error deleting item:", error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to delete item",
+          variant: "destructive",
+        });
+        return false;
+      }
 
-      queryClient.invalidateQueries({ queryKey: ["items", roomId] });
-      toast({ title: "Item deleted successfully" });
+      await queryClient.invalidateQueries({ queryKey: ["items", roomId] });
+      await queryClient.invalidateQueries({ queryKey: ["activity-logs", roomId] });
+      
+      toast({ 
+        title: "Success",
+        description: "Item deleted successfully" 
+      });
       return true;
     } catch (error) {
       console.error("Error deleting item:", error);
       toast({
         title: "Error",
-        description: "Failed to delete item",
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
       return false;
