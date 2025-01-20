@@ -71,7 +71,7 @@ export function AppSidebar() {
     }
   };
 
-  const SidebarContent = () => (
+  const SidebarContents = () => (
     <>
       <div className="p-4">
         <h1 className="text-xl font-bold text-primary">MCPI Inventory</h1>
@@ -171,7 +171,7 @@ export function AppSidebar() {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="p-0 w-72">
-        <SidebarContent />
+        <SidebarContents />
       </SheetContent>
     </Sheet>
   );
@@ -180,7 +180,7 @@ export function AppSidebar() {
   const desktopSidebar = (
     <Sidebar className="hidden md:flex">
       <SidebarContent>
-        <SidebarContent />
+        <SidebarContents />
       </SidebarContent>
     </Sidebar>
   );
