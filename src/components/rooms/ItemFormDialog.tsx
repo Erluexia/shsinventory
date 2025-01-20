@@ -35,7 +35,8 @@ interface ItemFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: ItemFormValues) => Promise<void>;
-  mode: "create";
+  mode: "create" | "edit";
+  defaultValues?: ItemFormValues;
 }
 
 export function ItemFormDialog({
@@ -43,13 +44,14 @@ export function ItemFormDialog({
   onOpenChange,
   onSubmit,
   mode,
+  defaultValues,
 }: ItemFormDialogProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<ItemFormValues>({
     resolver: zodResolver(itemFormSchema),
-    defaultValues: {
+    defaultValues: defaultValues || {
       name: "",
       quantity: 1,
       maintenance_quantity: 0,
@@ -66,13 +68,13 @@ export function ItemFormDialog({
       form.reset();
       onOpenChange(false);
       toast({
-        title: "Item created successfully",
+        title: `Item ${mode === 'create' ? 'created' : 'updated'} successfully`,
       });
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.error(`Error ${mode === 'create' ? 'creating' : 'updating'} item:`, error);
       toast({
         title: "Error",
-        description: "Failed to save item. Please try again.",
+        description: `Failed to ${mode === 'create' ? 'save' : 'update'} item. Please try again.`,
         variant: "destructive",
       });
     } finally {
@@ -84,9 +86,11 @@ export function ItemFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Item</DialogTitle>
+          <DialogTitle>{mode === 'create' ? 'Add New Item' : 'Edit Item'}</DialogTitle>
           <DialogDescription>
-            Add a new item to this room's inventory
+            {mode === 'create' 
+              ? "Add a new item to this room's inventory"
+              : "Update the item's details"}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -98,7 +102,11 @@ export function ItemFormDialog({
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Item name" {...field} />
+                    <Input 
+                      placeholder="Item name" 
+                      {...field} 
+                      disabled={mode === 'edit'}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -162,7 +170,9 @@ export function ItemFormDialog({
             </div>
             <DialogFooter>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Creating..." : "Create"}
+                {isSubmitting 
+                  ? (mode === 'create' ? 'Creating...' : 'Updating...') 
+                  : (mode === 'create' ? 'Create' : 'Update')}
               </Button>
             </DialogFooter>
           </form>

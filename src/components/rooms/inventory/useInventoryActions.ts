@@ -95,7 +95,8 @@ export const useInventoryActions = (roomId: string) => {
         .update({
           ...values,
           maintenance_quantity: values.maintenance_quantity || 0,
-          replacement_quantity: values.replacement_quantity || 0
+          replacement_quantity: values.replacement_quantity || 0,
+          updated_at: new Date().toISOString()
         })
         .eq("id", itemId);
 

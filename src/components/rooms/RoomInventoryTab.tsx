@@ -36,7 +36,7 @@ export const RoomInventoryTab = ({ items, roomId, isLoading }: RoomInventoryTabP
         <Button onClick={() => setIsCreateDialogOpen(true)}>Add New Item</Button>
       </div>
 
-      <ItemTable items={items} />
+      <ItemTable items={items} roomId={roomId} />
 
       <ItemFormDialog
         open={isCreateDialogOpen}
