@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
+import { format } from "date-fns";
 
 interface ItemTableProps {
   items: any[];
@@ -22,20 +23,16 @@ export const ItemTable = ({ items }: ItemTableProps) => {
       if (!quantities.has(item.name)) {
         quantities.set(item.name, {
           total: 0,
-          needs_maintenance: 0,
-          needs_replacement: 0,
-          id: item.id
+          needs_maintenance: item.maintenance_quantity || 0,
+          needs_replacement: item.replacement_quantity || 0,
+          id: item.id,
+          created_at: item.created_at,
+          updated_at: item.updated_at
         });
       }
       
       const current = quantities.get(item.name);
       current.total += item.quantity;
-      
-      if (item.status === 'needs_maintenance') {
-        current.needs_maintenance += item.quantity;
-      } else if (item.status === 'needs_replacement') {
-        current.needs_replacement += item.quantity;
-      }
     });
     
     return quantities;
@@ -51,8 +48,9 @@ export const ItemTable = ({ items }: ItemTableProps) => {
           <TableRow>
             <TableHead>Item Name</TableHead>
             <TableHead>Total Quantity</TableHead>
-            <TableHead>Needs Maintenance (Quantity)</TableHead>
-            <TableHead>Needs Replacement (Quantity)</TableHead>
+            <TableHead>Needs Maintenance</TableHead>
+            <TableHead>Needs Replacement</TableHead>
+            <TableHead>Last Updated</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -66,6 +64,11 @@ export const ItemTable = ({ items }: ItemTableProps) => {
               </TableCell>
               <TableCell>
                 {quantities.needs_replacement > 0 ? `${quantities.needs_replacement} items` : 'None'}
+              </TableCell>
+              <TableCell>
+                {quantities.updated_at 
+                  ? format(new Date(quantities.updated_at), 'MMM d, yyyy HH:mm')
+                  : format(new Date(quantities.created_at), 'MMM d, yyyy HH:mm')}
               </TableCell>
               <TableCell className="text-right space-x-2">
                 <Button variant="ghost" size="icon">

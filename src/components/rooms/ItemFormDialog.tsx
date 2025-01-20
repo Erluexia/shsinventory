@@ -32,6 +32,8 @@ import { useState } from "react";
 const itemFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   quantity: z.number().min(1, "Quantity must be at least 1"),
+  maintenance_quantity: z.number().min(0, "Maintenance quantity cannot be negative"),
+  replacement_quantity: z.number().min(0, "Replacement quantity cannot be negative"),
   status: z.enum(["good", "needs_maintenance", "needs_replacement"]),
 });
 
@@ -58,6 +60,8 @@ export function ItemFormDialog({
     defaultValues: {
       name: "",
       quantity: 1,
+      maintenance_quantity: 0,
+      replacement_quantity: 0,
       status: "good",
     },
   });
@@ -109,53 +113,93 @@ export function ItemFormDialog({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="quantity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quantity</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="1"
-                      {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Total Quantity</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
+                      <Input
+                        type="number"
+                        min="1"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="good">Good</SelectItem>
-                      <SelectItem value="needs_maintenance">
-                        Needs Maintenance
-                      </SelectItem>
-                      <SelectItem value="needs_replacement">
-                        Needs Replacement
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="good">Good</SelectItem>
+                        <SelectItem value="needs_maintenance">
+                          Needs Maintenance
+                        </SelectItem>
+                        <SelectItem value="needs_replacement">
+                          Needs Replacement
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="maintenance_quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Needs Maintenance</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="replacement_quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Needs Replacement</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <DialogFooter>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Creating..." : "Create"}

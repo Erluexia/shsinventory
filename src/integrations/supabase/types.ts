@@ -110,8 +110,10 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
+          maintenance_quantity: number
           name: string
           quantity: number
+          replacement_quantity: number
           room_id: string | null
           status: Database["public"]["Enums"]["item_status"] | null
           updated_at: string
@@ -121,8 +123,10 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          maintenance_quantity?: number
           name: string
           quantity?: number
+          replacement_quantity?: number
           room_id?: string | null
           status?: Database["public"]["Enums"]["item_status"] | null
           updated_at?: string
@@ -132,8 +136,10 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          maintenance_quantity?: number
           name?: string
           quantity?: number
+          replacement_quantity?: number
           room_id?: string | null
           status?: Database["public"]["Enums"]["item_status"] | null
           updated_at?: string

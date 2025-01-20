@@ -8,14 +8,19 @@ export const useInventoryActions = (roomId: string) => {
 
   const handleCreateItem = async (values: any) => {
     try {
+      console.log("Creating item with values:", values);
       const { error } = await supabase
         .from("items")
-        .insert([{ ...values, room_id: roomId }]);
+        .insert([{ 
+          ...values, 
+          room_id: roomId,
+          maintenance_quantity: values.maintenance_quantity || 0,
+          replacement_quantity: values.replacement_quantity || 0
+        }]);
 
       if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ["items", roomId] });
-      toast({ title: "Item created successfully" });
       return true;
     } catch (error) {
       console.error("Error creating item:", error);
@@ -30,9 +35,14 @@ export const useInventoryActions = (roomId: string) => {
 
   const handleEditItem = async (itemId: string, values: any) => {
     try {
+      console.log("Editing item with values:", values);
       const { error } = await supabase
         .from("items")
-        .update(values)
+        .update({
+          ...values,
+          maintenance_quantity: values.maintenance_quantity || 0,
+          replacement_quantity: values.replacement_quantity || 0
+        })
         .eq("id", itemId);
 
       if (error) throw error;
@@ -53,6 +63,7 @@ export const useInventoryActions = (roomId: string) => {
 
   const handleDeleteItem = async (itemId: string) => {
     try {
+      console.log("Deleting item:", itemId);
       const { error } = await supabase
         .from("items")
         .delete()
