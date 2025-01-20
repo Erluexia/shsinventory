@@ -60,50 +60,6 @@ export type Database = {
         }
         Relationships: []
       }
-      item_history: {
-        Row: {
-          changed_by: string | null
-          created_at: string
-          description: string | null
-          id: string
-          item_id: string | null
-          new_quantity: number | null
-          new_status: Database["public"]["Enums"]["item_status"] | null
-          previous_quantity: number | null
-          previous_status: Database["public"]["Enums"]["item_status"] | null
-        }
-        Insert: {
-          changed_by?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          item_id?: string | null
-          new_quantity?: number | null
-          new_status?: Database["public"]["Enums"]["item_status"] | null
-          previous_quantity?: number | null
-          previous_status?: Database["public"]["Enums"]["item_status"] | null
-        }
-        Update: {
-          changed_by?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          item_id?: string | null
-          new_quantity?: number | null
-          new_status?: Database["public"]["Enums"]["item_status"] | null
-          previous_quantity?: number | null
-          previous_status?: Database["public"]["Enums"]["item_status"] | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "item_history_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "items"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       items: {
         Row: {
           created_at: string

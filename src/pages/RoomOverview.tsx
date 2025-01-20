@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useState } from "react";
 import { RoomInventoryTab } from "@/components/rooms/RoomInventoryTab";
-import { RoomHistoryTab } from "@/components/rooms/RoomHistoryTab";
 import { RoomActivityTab } from "@/components/rooms/RoomActivityTab";
 import { RoomStatusBadge } from "@/components/rooms/RoomStatusBadge";
 
@@ -50,32 +49,6 @@ const RoomOverview = () => {
 
       if (error) {
         console.error("Error fetching items:", error);
-        throw error;
-      }
-      return data;
-    },
-    enabled: !!room?.id,
-  });
-
-  const { data: itemHistory, isLoading: isLoadingHistory } = useQuery({
-    queryKey: ["item-history", room?.id],
-    queryFn: async () => {
-      if (!room?.id) return [];
-
-      console.log("Fetching item history for room:", room.id);
-      const { data, error } = await supabase
-        .from("item_history")
-        .select(`
-          *,
-          items (
-            name,
-            room_id
-          )
-        `)
-        .eq("items.room_id", room.id);
-
-      if (error) {
-        console.error("Error fetching item history:", error);
         throw error;
       }
       return data;
@@ -175,16 +148,11 @@ const RoomOverview = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList>
             <TabsTrigger value="inventory">Inventory</TabsTrigger>
-            <TabsTrigger value="history">Item History</TabsTrigger>
             <TabsTrigger value="activity">Activity Log</TabsTrigger>
           </TabsList>
 
           <TabsContent value="inventory">
             <RoomInventoryTab items={items || []} roomId={room.id} />
-          </TabsContent>
-
-          <TabsContent value="history">
-            <RoomHistoryTab itemHistory={itemHistory || []} />
           </TabsContent>
 
           <TabsContent value="activity">
