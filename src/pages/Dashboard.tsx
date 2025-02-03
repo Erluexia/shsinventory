@@ -87,7 +87,7 @@ export default function Dashboard() {
       console.log('Fetching overall metrics...');
       const { data: items, error } = await supabase
         .from('items')
-        .select('id, status, quantity');
+        .select('id, status');
       
       if (error) {
         console.error('Error fetching metrics:', error);
@@ -97,6 +97,7 @@ export default function Dashboard() {
       return {
         totalItems: items.length,
         needsMaintenance: items.filter(item => item.status === 'needs_maintenance').length,
+        needsReplacement: items.filter(item => item.status === 'needs_replacement').length
       };
     },
   });
@@ -107,7 +108,7 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold">Dashboard</h1>
 
         {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="p-6">
             <div className="flex items-center space-x-2">
               <LayoutDashboard className="h-5 w-5 text-primary" />
@@ -123,8 +124,18 @@ export default function Dashboard() {
               <Wrench className="h-5 w-5 text-yellow-500" />
               <h3 className="text-lg font-semibold">Need Maintenance</h3>
             </div>
-            <p className="text-3xl font-bold mt-2">
+            <p className="text-3xl font-bold mt-2 text-yellow-500">
               {isLoadingMetrics ? "..." : metrics?.needsMaintenance}
+            </p>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              <h3 className="text-lg font-semibold">Need Replacement</h3>
+            </div>
+            <p className="text-3xl font-bold mt-2 text-red-500">
+              {isLoadingMetrics ? "..." : metrics?.needsReplacement}
             </p>
           </Card>
         </div>
@@ -139,6 +150,10 @@ export default function Dashboard() {
                   <div className="h-24 bg-gray-200 rounded"></div>
                 </Card>
               ))
+            ) : floors?.length === 0 ? (
+              <Card className="p-6 col-span-full">
+                <p className="text-center text-gray-500">No floors found. Please add floors to get started.</p>
+              </Card>
             ) : (
               floors?.map((floor: FloorData) => (
                 <Card 
