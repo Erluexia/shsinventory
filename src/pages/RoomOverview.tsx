@@ -22,7 +22,7 @@ const RoomOverview = () => {
         .from("rooms")
         .select(`
           *,
-          floor:floors(*)
+          floors!rooms_floor_id_fkey(*)
         `)
         .eq("room_number", roomId)
         .maybeSingle();
@@ -154,7 +154,7 @@ const RoomOverview = () => {
       <div className="p-4">
         <div className="mb-4">
           <h1 className="text-2xl font-bold">
-            Room {room?.room_number} (Floor {room?.floor?.floor_number})
+            Room {room.room_number} (Floor {room.floors?.floor_number})
           </h1>
         </div>
 
