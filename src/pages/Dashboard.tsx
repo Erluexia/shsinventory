@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card } from "@/components/ui/card";
-import { LayoutDashboard, Wrench, AlertTriangle } from "lucide-react";
+import { LayoutDashboard, Wrench, AlertTriangle, Building2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface FloorStats {
   totalItems: number;
@@ -17,6 +18,7 @@ interface FloorData {
   name: string;
   floor_number: number;
   stats: FloorStats;
+  roomCount: number;
 }
 
 export default function Dashboard() {
@@ -36,11 +38,13 @@ export default function Dashboard() {
 
       if (floorsError) {
         console.error('Error fetching floors:', floorsError);
+        toast.error('Failed to load floors');
         throw floorsError;
       }
 
-      // Then, for each floor, fetch room IDs
+      // Then, for each floor, fetch rooms and items
       const floorsWithStats = await Promise.all(floorsData.map(async (floor) => {
+        // Get rooms for this floor
         const { data: rooms, error: roomsError } = await supabase
           .from('rooms')
           .select('id')
@@ -52,7 +56,7 @@ export default function Dashboard() {
         }
 
         // Get all items in these rooms
-        const roomIds = rooms.map(room => room.id);
+        const roomIds = rooms?.map(room => room.id) || [];
         const { data: items, error: itemsError } = await supabase
           .from('items')
           .select('*')
@@ -72,6 +76,7 @@ export default function Dashboard() {
         return {
           ...floor,
           stats,
+          roomCount: rooms?.length || 0
         };
       }));
 
@@ -91,13 +96,24 @@ export default function Dashboard() {
       
       if (error) {
         console.error('Error fetching metrics:', error);
+        toast.error('Failed to load metrics');
         throw error;
+      }
+
+      const { data: roomCount, error: roomError } = await supabase
+        .from('rooms')
+        .select('id', { count: 'exact' });
+
+      if (roomError) {
+        console.error('Error fetching room count:', roomError);
+        throw roomError;
       }
 
       return {
         totalItems: items.length,
         needsMaintenance: items.filter(item => item.status === 'needs_maintenance').length,
-        needsReplacement: items.filter(item => item.status === 'needs_replacement').length
+        needsReplacement: items.filter(item => item.status === 'needs_replacement').length,
+        totalRooms: roomCount.length
       };
     },
   });
@@ -108,7 +124,7 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold">Dashboard</h1>
 
         {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="p-6">
             <div className="flex items-center space-x-2">
               <LayoutDashboard className="h-5 w-5 text-primary" />
@@ -116,6 +132,16 @@ export default function Dashboard() {
             </div>
             <p className="text-3xl font-bold mt-2">
               {isLoadingMetrics ? "..." : metrics?.totalItems}
+            </p>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center space-x-2">
+              <Building2 className="h-5 w-5 text-blue-500" />
+              <h3 className="text-lg font-semibold">Total Rooms</h3>
+            </div>
+            <p className="text-3xl font-bold mt-2 text-blue-500">
+              {isLoadingMetrics ? "..." : metrics?.totalRooms}
             </p>
           </Card>
 
@@ -159,10 +185,14 @@ export default function Dashboard() {
                 <Card 
                   key={floor.id} 
                   className="p-6 cursor-pointer hover:shadow-lg transition-shadow"
-                  onClick={() => navigate(`/floor/${floor.id}`)}
+                  onClick={() => navigate(`/rooms/${floor.id}`)}
                 >
                   <h3 className="text-lg font-semibold mb-4">{floor.name}</h3>
                   <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Total Rooms:</span>
+                      <span className="font-medium">{floor.roomCount}</span>
+                    </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Total Items:</span>
                       <span className="font-medium">{floor.stats.totalItems}</span>
