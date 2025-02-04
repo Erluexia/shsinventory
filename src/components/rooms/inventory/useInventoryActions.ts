@@ -6,11 +6,40 @@ export const useInventoryActions = (roomId: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const createActivityLog = async (itemId: string, action: string, details: any) => {
+    console.log("Creating activity log:", { itemId, action, details });
+    
+    try {
+      const { error } = await supabase
+        .from("activity_logs")
+        .insert([{
+          entity_type: "item",
+          entity_id: itemId,
+          action,
+          details,
+          user_id: (await supabase.auth.getUser()).data.user?.id
+        }]);
+
+      if (error) {
+        console.error("Error creating activity log:", error);
+      }
+    } catch (error) {
+      console.error("Error in createActivityLog:", error);
+    }
+  };
+
+  const refreshData = async () => {
+    console.log("Refreshing data for room:", roomId);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["items", roomId] }),
+      queryClient.invalidateQueries({ queryKey: ["activity-logs", roomId] })
+    ]);
+  };
+
   const handleCreateItem = async (values: any) => {
     try {
       console.log("Creating item with values:", values);
       
-      // Validate input
       if (!values.name?.trim()) {
         toast({
           title: "Error",
@@ -29,14 +58,16 @@ export const useInventoryActions = (roomId: string) => {
         return false;
       }
 
-      const { error } = await supabase
+      const { data: newItem, error } = await supabase
         .from("items")
         .insert([{ 
           ...values, 
           room_id: roomId,
           maintenance_quantity: values.maintenance_quantity || 0,
           replacement_quantity: values.replacement_quantity || 0
-        }]);
+        }])
+        .select()
+        .single();
 
       if (error) {
         console.error("Error creating item:", error);
@@ -48,8 +79,14 @@ export const useInventoryActions = (roomId: string) => {
         return false;
       }
 
-      await queryClient.invalidateQueries({ queryKey: ["items", roomId] });
-      await queryClient.invalidateQueries({ queryKey: ["activity-logs", roomId] });
+      await createActivityLog(newItem.id, "created", {
+        name: values.name,
+        quantity: values.quantity,
+        maintenance_quantity: values.maintenance_quantity,
+        replacement_quantity: values.replacement_quantity
+      });
+
+      await refreshData();
       
       toast({
         title: "Success",
@@ -71,7 +108,6 @@ export const useInventoryActions = (roomId: string) => {
     try {
       console.log("Editing item with values:", values);
       
-      // Validate input
       if (!values.name?.trim()) {
         toast({
           title: "Error",
@@ -110,8 +146,14 @@ export const useInventoryActions = (roomId: string) => {
         return false;
       }
 
-      await queryClient.invalidateQueries({ queryKey: ["items", roomId] });
-      await queryClient.invalidateQueries({ queryKey: ["activity-logs", roomId] });
+      await createActivityLog(itemId, "updated", {
+        name: values.name,
+        quantity: values.quantity,
+        maintenance_quantity: values.maintenance_quantity,
+        replacement_quantity: values.replacement_quantity
+      });
+
+      await refreshData();
       
       toast({ 
         title: "Success",
@@ -132,6 +174,14 @@ export const useInventoryActions = (roomId: string) => {
   const handleDeleteItem = async (itemId: string) => {
     try {
       console.log("Deleting item:", itemId);
+      
+      // Get item details before deletion for activity log
+      const { data: itemData } = await supabase
+        .from("items")
+        .select("*")
+        .eq("id", itemId)
+        .single();
+
       const { error } = await supabase
         .from("items")
         .delete()
@@ -147,8 +197,16 @@ export const useInventoryActions = (roomId: string) => {
         return false;
       }
 
-      await queryClient.invalidateQueries({ queryKey: ["items", roomId] });
-      await queryClient.invalidateQueries({ queryKey: ["activity-logs", roomId] });
+      if (itemData) {
+        await createActivityLog(itemId, "deleted", {
+          name: itemData.name,
+          quantity: itemData.quantity,
+          maintenance_quantity: itemData.maintenance_quantity,
+          replacement_quantity: itemData.replacement_quantity
+        });
+      }
+
+      await refreshData();
       
       toast({ 
         title: "Success",
