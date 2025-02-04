@@ -55,19 +55,6 @@ export const useInventoryActions = (roomId: string) => {
         return false;
       }
 
-      // Get user role from user metadata
-      const role = session.session.user.user_metadata.role;
-      console.log("User role from metadata:", role);
-
-      if (role !== 'property_custodian' && role !== 'admin') {
-        toast({
-          title: "Error",
-          description: "You don't have permission to create items",
-          variant: "destructive",
-        });
-        return false;
-      }
-
       const { data: newItem, error } = await supabase
         .from("items")
         .insert([{ 
@@ -129,19 +116,6 @@ export const useInventoryActions = (roomId: string) => {
         return false;
       }
 
-      // Get user role from user metadata
-      const role = session.session.user.user_metadata.role;
-      console.log("User role from metadata:", role);
-
-      if (role !== 'property_custodian' && role !== 'admin') {
-        toast({
-          title: "Error",
-          description: "You don't have permission to edit items",
-          variant: "destructive",
-        });
-        return false;
-      }
-
       const { error } = await supabase
         .from("items")
         .update({
@@ -196,19 +170,6 @@ export const useInventoryActions = (roomId: string) => {
         toast({
           title: "Error",
           description: "You must be logged in to delete items",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      // Get user role from user metadata
-      const role = session.session.user.user_metadata.role;
-      console.log("User role from metadata:", role);
-
-      if (role !== 'property_custodian' && role !== 'admin') {
-        toast({
-          title: "Error",
-          description: "You don't have permission to delete items",
           variant: "destructive",
         });
         return false;
