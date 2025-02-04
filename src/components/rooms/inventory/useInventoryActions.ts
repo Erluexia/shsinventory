@@ -45,11 +45,24 @@ export const useInventoryActions = (roomId: string) => {
     try {
       console.log("Creating item with values:", values);
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user) {
         toast({
           title: "Error",
           description: "You must be logged in to create items",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Get user role from JWT
+      const role = session.session.user.role;
+      console.log("User role from JWT:", role);
+
+      if (role !== 'property_custodian' && role !== 'admin') {
+        toast({
+          title: "Error",
+          description: "You don't have permission to create items",
           variant: "destructive",
         });
         return false;
@@ -60,7 +73,7 @@ export const useInventoryActions = (roomId: string) => {
         .insert([{ 
           ...values, 
           room_id: roomId,
-          created_by: user.id,
+          created_by: session.session.user.id,
           maintenance_quantity: values.maintenance_quantity || 0,
           replacement_quantity: values.replacement_quantity || 0
         }])
@@ -106,11 +119,24 @@ export const useInventoryActions = (roomId: string) => {
     try {
       console.log("Editing item with values:", values);
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user) {
         toast({
           title: "Error",
           description: "You must be logged in to edit items",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Get user role from JWT
+      const role = session.session.user.role;
+      console.log("User role from JWT:", role);
+
+      if (role !== 'property_custodian' && role !== 'admin') {
+        toast({
+          title: "Error",
+          description: "You don't have permission to edit items",
           variant: "destructive",
         });
         return false;
@@ -165,6 +191,29 @@ export const useInventoryActions = (roomId: string) => {
     try {
       console.log("Deleting item:", itemId);
       
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to delete items",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Get user role from JWT
+      const role = session.session.user.role;
+      console.log("User role from JWT:", role);
+
+      if (role !== 'property_custodian' && role !== 'admin') {
+        toast({
+          title: "Error",
+          description: "You don't have permission to delete items",
+          variant: "destructive",
+        });
+        return false;
+      }
+
       // Get item details before deletion for activity log
       const { data: itemData } = await supabase
         .from("items")
