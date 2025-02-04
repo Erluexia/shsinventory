@@ -15,13 +15,13 @@ export const useInventoryActions = (roomId: string) => {
 
       const { error } = await supabase
         .from("activity_logs")
-        .insert([{
+        .insert({
           entity_type: "item",
           entity_id: itemId,
           action,
           details,
-          user_id: user.id
-        }]);
+          user_id: user.id // Explicitly set the user_id to match auth.uid()
+        });
 
       if (error) {
         console.error("Error creating activity log:", error);
