@@ -81,15 +81,10 @@ const RoomOverview = () => {
 
       const itemIds = roomItems.map(item => item.id);
 
-      const { data, error } = await supabase
+      // Modified query to first get activity logs
+      const { data: logs, error } = await supabase
         .from("activity_logs")
-        .select(`
-          *,
-          profiles!activity_logs_user_id_fkey (
-            username,
-            avatar_url
-          )
-        `)
+        .select("*, user_id")
         .eq("entity_type", "item")
         .in("entity_id", itemIds)
         .order("created_at", { ascending: false });
@@ -99,7 +94,25 @@ const RoomOverview = () => {
         throw error;
       }
 
-      return data || [];
+      // Then fetch user profiles separately
+      const userIds = [...new Set(logs?.map(log => log.user_id) || [])];
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url")
+        .in("id", userIds);
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        throw profilesError;
+      }
+
+      // Combine the data
+      const logsWithProfiles = logs?.map(log => ({
+        ...log,
+        profiles: profiles?.find(profile => profile.id === log.user_id)
+      }));
+
+      return logsWithProfiles || [];
     },
     enabled: !!room?.id,
   });
