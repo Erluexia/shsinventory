@@ -61,58 +61,39 @@ const RoomOverview = () => {
     enabled: !!room?.id,
   });
 
-  const { data: activityLogs, isLoading: isLoadingLogs, error: logsError } = useQuery({
+  const { data: activityLogs, isLoading: isLoadingLogs, error: logsError, refetch: refetchLogs } = useQuery({
     queryKey: ["activity-logs", room?.id],
     queryFn: async () => {
       if (!room?.id) return [];
 
       console.log("Fetching activity logs for room:", room.id);
-      const { data: roomItems, error: itemsError } = await supabase
+      const { data: roomItems } = await supabase
         .from("items")
         .select("id")
         .eq("room_id", room.id);
 
-      if (itemsError) {
-        console.error("Error fetching room items:", itemsError);
-        throw itemsError;
-      }
-
       if (!roomItems?.length) return [];
 
       const itemIds = roomItems.map(item => item.id);
-
-      // Modified query to first get activity logs
-      const { data: logs, error } = await supabase
+      const { data: logs } = await supabase
         .from("activity_logs")
-        .select("*, user_id")
+        .select("*")
         .eq("entity_type", "item")
         .in("entity_id", itemIds)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching activity logs:", error);
-        throw error;
-      }
+      if (!logs?.length) return [];
 
-      // Then fetch user profiles separately
-      const userIds = [...new Set(logs?.map(log => log.user_id) || [])];
-      const { data: profiles, error: profilesError } = await supabase
+      const userIds = [...new Set(logs.map(log => log.user_id))];
+      const { data: profiles } = await supabase
         .from("profiles")
         .select("id, username, avatar_url")
         .in("id", userIds);
 
-      if (profilesError) {
-        console.error("Error fetching profiles:", profilesError);
-        throw profilesError;
-      }
-
-      // Combine the data
-      const logsWithProfiles = logs?.map(log => ({
+      return logs.map(log => ({
         ...log,
         profiles: profiles?.find(profile => profile.id === log.user_id)
       }));
-
-      return logsWithProfiles || [];
     },
     enabled: !!room?.id,
   });
@@ -189,6 +170,7 @@ const RoomOverview = () => {
             <RoomActivityTab 
               activityLogs={activityLogs || []} 
               isLoading={isLoadingLogs}
+              onRefresh={() => refetchLogs()}
             />
           </TabsContent>
         </Tabs>

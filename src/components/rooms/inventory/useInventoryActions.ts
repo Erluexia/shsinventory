@@ -20,7 +20,7 @@ export const useInventoryActions = (roomId: string) => {
           entity_id: itemId,
           action,
           details,
-          user_id: user.id // Explicitly set the user_id to match auth.uid()
+          user_id: user.id
         });
 
       if (error) {

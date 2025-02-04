@@ -9,13 +9,16 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 interface RoomActivityTabProps {
   activityLogs: any[];
   isLoading?: boolean;
+  onRefresh?: () => void;
 }
 
-export const RoomActivityTab = ({ activityLogs, isLoading }: RoomActivityTabProps) => {
+export const RoomActivityTab = ({ activityLogs, isLoading, onRefresh }: RoomActivityTabProps) => {
   const isMobile = useIsMobile();
 
   const formatDetails = (details: any) => {
@@ -33,6 +36,9 @@ export const RoomActivityTab = ({ activityLogs, isLoading }: RoomActivityTabProp
   if (isLoading) {
     return (
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+        <div className="flex justify-end p-4">
+          <Skeleton className="h-10 w-10" />
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -59,6 +65,16 @@ export const RoomActivityTab = ({ activityLogs, isLoading }: RoomActivityTabProp
 
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+      <div className="flex justify-end p-4">
+        <Button 
+          variant="outline" 
+          size="icon"
+          onClick={onRefresh}
+          className="h-10 w-10"
+        >
+          <RefreshCw className="h-4 w-4" />
+        </Button>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
