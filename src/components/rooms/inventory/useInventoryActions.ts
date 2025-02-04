@@ -58,11 +58,23 @@ export const useInventoryActions = (roomId: string) => {
         return false;
       }
 
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to create items",
+          variant: "destructive",
+        });
+        return false;
+      }
+
       const { data: newItem, error } = await supabase
         .from("items")
         .insert([{ 
           ...values, 
           room_id: roomId,
+          created_by: user.id, // Set the created_by field
           maintenance_quantity: values.maintenance_quantity || 0,
           replacement_quantity: values.replacement_quantity || 0
         }])
