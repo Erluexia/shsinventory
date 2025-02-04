@@ -24,7 +24,7 @@ import { useState } from "react";
 
 const itemFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  quantity: z.number().min(1, "Quantity must be at least 1"),
+  quantity: z.number().min(0, "Quantity cannot be negative"),
   maintenance_quantity: z.number().min(0, "Maintenance quantity cannot be negative"),
   replacement_quantity: z.number().min(0, "Replacement quantity cannot be negative"),
 });
@@ -121,7 +121,7 @@ export function ItemFormDialog({
                   <FormControl>
                     <Input
                       type="number"
-                      min="1"
+                      min="0"
                       {...field}
                       onChange={(e) => field.onChange(Number(e.target.value))}
                     />

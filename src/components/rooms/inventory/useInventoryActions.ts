@@ -10,6 +10,9 @@ export const useInventoryActions = (roomId: string) => {
     console.log("Creating activity log:", { itemId, action, details });
     
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No authenticated user");
+
       const { error } = await supabase
         .from("activity_logs")
         .insert([{
@@ -17,14 +20,16 @@ export const useInventoryActions = (roomId: string) => {
           entity_id: itemId,
           action,
           details,
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: user.id
         }]);
 
       if (error) {
         console.error("Error creating activity log:", error);
+        throw error;
       }
     } catch (error) {
       console.error("Error in createActivityLog:", error);
+      throw error;
     }
   };
 
@@ -40,25 +45,6 @@ export const useInventoryActions = (roomId: string) => {
     try {
       console.log("Creating item with values:", values);
       
-      if (!values.name?.trim()) {
-        toast({
-          title: "Error",
-          description: "Item name is required",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      if (values.quantity < 1) {
-        toast({
-          title: "Error",
-          description: "Quantity must be at least 1",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast({
@@ -74,7 +60,7 @@ export const useInventoryActions = (roomId: string) => {
         .insert([{ 
           ...values, 
           room_id: roomId,
-          created_by: user.id, // Set the created_by field
+          created_by: user.id,
           maintenance_quantity: values.maintenance_quantity || 0,
           replacement_quantity: values.replacement_quantity || 0
         }])
@@ -94,8 +80,8 @@ export const useInventoryActions = (roomId: string) => {
       await createActivityLog(newItem.id, "created", {
         name: values.name,
         quantity: values.quantity,
-        maintenance_quantity: values.maintenance_quantity,
-        replacement_quantity: values.replacement_quantity
+        maintenance_quantity: values.maintenance_quantity || 0,
+        replacement_quantity: values.replacement_quantity || 0
       });
 
       await refreshData();
@@ -120,19 +106,11 @@ export const useInventoryActions = (roomId: string) => {
     try {
       console.log("Editing item with values:", values);
       
-      if (!values.name?.trim()) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
         toast({
           title: "Error",
-          description: "Item name is required",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      if (values.quantity < 1) {
-        toast({
-          title: "Error",
-          description: "Quantity must be at least 1",
+          description: "You must be logged in to edit items",
           variant: "destructive",
         });
         return false;
@@ -161,8 +139,8 @@ export const useInventoryActions = (roomId: string) => {
       await createActivityLog(itemId, "updated", {
         name: values.name,
         quantity: values.quantity,
-        maintenance_quantity: values.maintenance_quantity,
-        replacement_quantity: values.replacement_quantity
+        maintenance_quantity: values.maintenance_quantity || 0,
+        replacement_quantity: values.replacement_quantity || 0
       });
 
       await refreshData();
