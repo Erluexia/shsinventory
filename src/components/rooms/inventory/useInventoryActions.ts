@@ -57,13 +57,13 @@ export const useInventoryActions = (roomId: string) => {
 
       const { data: newItem, error } = await supabase
         .from("items")
-        .insert([{ 
-          ...values, 
+        .insert({
+          ...values,
           room_id: roomId,
           created_by: session.session.user.id,
           maintenance_quantity: values.maintenance_quantity || 0,
           replacement_quantity: values.replacement_quantity || 0
-        }])
+        })
         .select()
         .single();
 
@@ -124,7 +124,8 @@ export const useInventoryActions = (roomId: string) => {
           replacement_quantity: values.replacement_quantity || 0,
           updated_at: new Date().toISOString()
         })
-        .eq("id", itemId);
+        .eq("id", itemId)
+        .eq("room_id", roomId); // Ensure the item belongs to the current room
 
       if (error) {
         console.error("Error updating item:", error);
@@ -180,12 +181,14 @@ export const useInventoryActions = (roomId: string) => {
         .from("items")
         .select("*")
         .eq("id", itemId)
+        .eq("room_id", roomId) // Ensure the item belongs to the current room
         .single();
 
       const { error } = await supabase
         .from("items")
         .delete()
-        .eq("id", itemId);
+        .eq("id", itemId)
+        .eq("room_id", roomId); // Ensure the item belongs to the current room
 
       if (error) {
         console.error("Error deleting item:", error);

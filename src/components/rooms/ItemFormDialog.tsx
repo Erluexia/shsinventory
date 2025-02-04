@@ -105,7 +105,6 @@ export function ItemFormDialog({
                     <Input 
                       placeholder="Item name" 
                       {...field} 
-                      disabled={mode === 'edit'}
                     />
                   </FormControl>
                   <FormMessage />
