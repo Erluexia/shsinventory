@@ -55,9 +55,9 @@ export const useInventoryActions = (roomId: string) => {
         return false;
       }
 
-      // Get user role from JWT
-      const role = session.session.user.role;
-      console.log("User role from JWT:", role);
+      // Get user role from user metadata
+      const role = session.session.user.user_metadata.role;
+      console.log("User role from metadata:", role);
 
       if (role !== 'property_custodian' && role !== 'admin') {
         toast({
@@ -129,9 +129,9 @@ export const useInventoryActions = (roomId: string) => {
         return false;
       }
 
-      // Get user role from JWT
-      const role = session.session.user.role;
-      console.log("User role from JWT:", role);
+      // Get user role from user metadata
+      const role = session.session.user.user_metadata.role;
+      console.log("User role from metadata:", role);
 
       if (role !== 'property_custodian' && role !== 'admin') {
         toast({
@@ -201,9 +201,9 @@ export const useInventoryActions = (roomId: string) => {
         return false;
       }
 
-      // Get user role from JWT
-      const role = session.session.user.role;
-      console.log("User role from JWT:", role);
+      // Get user role from user metadata
+      const role = session.session.user.user_metadata.role;
+      console.log("User role from metadata:", role);
 
       if (role !== 'property_custodian' && role !== 'admin') {
         toast({
