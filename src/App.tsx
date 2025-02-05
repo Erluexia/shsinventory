@@ -59,7 +59,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         console.log('Token was refreshed successfully');
       }
 
-      // Check for sign out or session expiration events
+      // Check for sign out event
       if (event === 'SIGNED_OUT') {
         // Clear any application cache/state
         queryClient.clear();
