@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Dashboard from "./pages/Dashboard";
@@ -17,16 +18,29 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
         console.log("Initial session check:", session);
+        
+        if (error) {
+          console.error("Session error:", error);
+          throw error;
+        }
+        
         setSession(session);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error getting session:", error);
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: "Please sign in again to continue.",
+        });
+        navigate('/login');
       } finally {
         setLoading(false);
       }
@@ -37,23 +51,29 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("Auth state change event:", _event);
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state change event:", event);
       console.log("New session state:", session);
-      setSession(session);
-      setLoading(false);
 
-      // Only redirect on sign out
-      if (_event === 'SIGNED_OUT') {
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('Token was refreshed successfully');
+      }
+
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        // Clear any application cache/state
+        queryClient.clear();
         navigate('/login');
       }
+
+      setSession(session);
+      setLoading(false);
     });
 
     return () => {
       console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, toast, queryClient]);
 
   // Show loading state
   if (loading) {
@@ -76,25 +96,38 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Check session
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log("Public route session check:", session);
-      setSession(session);
-      setLoading(false);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log("Public route session check:", session);
+        
+        if (error) {
+          console.error("Session check error:", error);
+          throw error;
+        }
+        
+        setSession(session);
+      } catch (error) {
+        console.error("Error checking session:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Public route auth event:", event);
       setSession(session);
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [toast]);
 
   if (loading) {
     return (
