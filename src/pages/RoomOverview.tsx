@@ -68,7 +68,7 @@ const RoomOverview = () => {
 
       console.log("Fetching activity logs for room:", room.id);
       
-      // First, get all activity logs for items in this room
+      // First, get all activity logs for items
       const { data: logs, error: logsError } = await supabase
         .from("activity_logs")
         .select("*")

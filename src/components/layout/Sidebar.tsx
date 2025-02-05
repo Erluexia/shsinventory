@@ -92,7 +92,7 @@ export function AppSidebar() {
                 onClick={() => navigate("/dashboard")}
                 className={cn(
                   "transition-colors duration-200 hover:bg-primary/10",
-                  isCurrentRoute("/dashboard") && "bg-primary/20"
+                  isCurrentRoute("/dashboard") && "bg-primary/20 text-primary font-medium"
                 )}
               >
                 <button className="w-full">
@@ -115,7 +115,10 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   asChild
                   onClick={() => setExpandedFloor(expandedFloor === floor.id ? null : floor.id)}
-                  className="transition-colors duration-200 hover:bg-primary/10"
+                  className={cn(
+                    "transition-colors duration-200 hover:bg-primary/10",
+                    expandedFloor === floor.id && "bg-primary/5 font-medium"
+                  )}
                 >
                   <button className="w-full">
                     <span>{floor.name}</span>
@@ -133,7 +136,7 @@ export function AppSidebar() {
                         }}
                         className={cn(
                           "transition-colors duration-200 hover:bg-primary/10",
-                          isCurrentRoom(room) && "bg-primary/20"
+                          isCurrentRoom(room) && "bg-primary/20 text-primary font-medium"
                         )}
                       >
                         <button className="w-full text-sm py-1">
@@ -157,7 +160,7 @@ export function AppSidebar() {
             onClick={() => navigate("/account")}
             className={cn(
               "transition-colors duration-200 hover:bg-primary/10",
-              isCurrentRoute("/account") && "bg-primary/20"
+              isCurrentRoute("/account") && "bg-primary/20 text-primary font-medium"
             )}
           >
             <button className="w-full flex items-center space-x-2">
@@ -168,10 +171,10 @@ export function AppSidebar() {
           <SidebarMenuButton
             asChild
             onClick={handleLogout}
-            className="transition-colors duration-200 hover:bg-primary/10 hover:text-red-600"
+            className="transition-colors duration-200 hover:bg-red-50 hover:text-red-600 group"
           >
             <button className="w-full flex items-center space-x-2">
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-4 h-4 group-hover:text-red-600" />
               <span>Logout</span>
             </button>
           </SidebarMenuButton>
