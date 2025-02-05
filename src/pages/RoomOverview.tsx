@@ -74,7 +74,7 @@ const RoomOverview = () => {
         .select("id")
         .eq("room_id", room.id);
 
-      // Get activity logs for all items, including deleted ones
+      // Get activity logs for all items
       const { data: logs, error: logsError } = await supabase
         .from("activity_logs")
         .select("*")
@@ -90,25 +90,39 @@ const RoomOverview = () => {
       const roomItemIds = new Set((allItems || []).map(item => item.id));
       const filteredLogs = logs?.filter(log => roomItemIds.has(log.entity_id)) || [];
 
-      // Fetch user profiles separately
+      // Get unique user IDs from filtered logs
       const userIds = [...new Set(filteredLogs.map(log => log.user_id))].filter(Boolean);
       
       if (userIds.length > 0) {
-        const { data: profiles, error: profilesError } = await supabase
-          .from("profiles")
-          .select("id, username, avatar_url")
-          .in("id", userIds);
+        try {
+          // Fetch profiles one by one to avoid IN clause issues
+          const profiles = await Promise.all(
+            userIds.map(async (userId) => {
+              const { data, error } = await supabase
+                .from("profiles")
+                .select("id, username, avatar_url")
+                .eq("id", userId)
+                .single();
+              
+              if (error) {
+                console.error(`Error fetching profile for user ${userId}:`, error);
+                return null;
+              }
+              return data;
+            })
+          );
 
-        if (profilesError) {
-          console.error("Error fetching profiles:", profilesError);
-          throw profilesError;
+          // Filter out null results and merge profiles with logs
+          const validProfiles = profiles.filter(Boolean);
+          return filteredLogs.map(log => ({
+            ...log,
+            profiles: validProfiles.find(profile => profile?.id === log.user_id)
+          }));
+        } catch (error) {
+          console.error("Error fetching profiles:", error);
+          // Return logs without profiles rather than failing completely
+          return filteredLogs;
         }
-
-        // Merge profiles with logs
-        return filteredLogs.map(log => ({
-          ...log,
-          profiles: profiles?.find(profile => profile.id === log.user_id)
-        }));
       }
 
       return filteredLogs;
