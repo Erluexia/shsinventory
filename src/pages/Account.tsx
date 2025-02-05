@@ -5,120 +5,92 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import ReactCrop, { Crop } from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { z } from "zod";
+
+const passwordSchema = z.object({
+  currentPassword: z.string().min(6, "Password must be at least 6 characters"),
+  newPassword: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string()
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
 
 export default function Account() {
-  const [isCropperOpen, setIsCropperOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [crop, setCrop] = useState<Crop>({
-    unit: '%',
-    width: 100,
-    height: 100,
-    x: 0,
-    y: 0
-  });
   const [profileData, setProfileData] = useState({
     username: "",
-    avatar_url: "",
-    email: "",
+    role: "",
   });
+  
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { toast } = useToast();
 
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setSelectedImage(reader.result as string);
-        setIsCropperOpen(true);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleCropComplete = async () => {
-    if (!selectedImage) return;
-
-    const image = new Image();
-    image.src = selectedImage;
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    if (!ctx) return;
-
-    canvas.width = 300;
-    canvas.height = 300;
-
-    ctx.drawImage(
-      image,
-      crop.x * image.width / 100,
-      crop.y * image.height / 100,
-      crop.width * image.width / 100,
-      crop.height * image.height / 100,
-      0,
-      0,
-      300,
-      300
-    );
-
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-
-      const file = new File([blob], 'avatar.png', { type: 'image/png' });
-      
-      const { data, error } = await supabase.storage
-        .from('avatars')
-        .upload(`${Date.now()}-avatar.png`, file);
-
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to upload image. Please try again.",
-        });
-      } else if (data) {
-        const { data: urlData } = supabase.storage
-          .from('avatars')
-          .getPublicUrl(data.path);
-        setProfileData({
-          ...profileData,
-          avatar_url: urlData.publicUrl,
-        });
-      }
-    }, 'image/png');
-
-    setIsCropperOpen(false);
-  };
-
   const handleProfileUpdate = async () => {
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        username: profileData.username,
-        avatar_url: profileData.avatar_url,
-      })
-      .eq("id", (await supabase.auth.getUser()).data.user?.id);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          username: profileData.username,
+          role: profileData.role,
+        })
+        .eq("id", (await supabase.auth.getUser()).data.user?.id);
 
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update profile. Please try again.",
-      });
-    } else {
+      if (error) throw error;
+
       toast({
         title: "Success",
         description: "Profile updated successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    }
+  };
+
+  const handlePasswordUpdate = async () => {
+    try {
+      const validationResult = passwordSchema.safeParse(passwordData);
+      
+      if (!validationResult.success) {
+        throw new Error(validationResult.error.errors[0].message);
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword,
+      });
+
+      if (error) throw error;
+
+      // Clear password fields after successful update
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      toast({
+        title: "Success",
+        description: "Password updated successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
       });
     }
   };
@@ -132,7 +104,6 @@ export default function Account() {
           <TabsList>
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile">
@@ -140,44 +111,27 @@ export default function Account() {
               <CardHeader>
                 <CardTitle>Profile Information</CardTitle>
                 <CardDescription>
-                  Update your profile information and avatar
+                  Update your profile information
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center space-x-4">
-                  <Avatar className="h-20 w-20">
-                    <AvatarImage src={profileData.avatar_url} />
-                    <AvatarFallback>
-                      {profileData.username?.[0]?.toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <Button variant="outline" onClick={() => document.getElementById('avatar-upload')?.click()}>
-                    Change Avatar
-                    <input
-                      id="avatar-upload"
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleImageSelect}
-                    />
-                  </Button>
-                </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="username">Username</Label>
                   <Input
                     id="username"
                     value={profileData.username}
                     onChange={(e) => setProfileData({ ...profileData, username: e.target.value })}
+                    placeholder="Enter your username"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="role">Role</Label>
                   <Input
-                    id="email"
-                    value={profileData.email}
-                    disabled
+                    id="role"
+                    value={profileData.role}
+                    onChange={(e) => setProfileData({ ...profileData, role: e.target.value })}
+                    placeholder="Enter your role"
                   />
                 </div>
 
@@ -189,54 +143,89 @@ export default function Account() {
           <TabsContent value="security">
             <Card>
               <CardHeader>
-                <CardTitle>Security Settings</CardTitle>
+                <CardTitle>Change Password</CardTitle>
                 <CardDescription>
-                  Manage your password and security preferences
+                  Update your password
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button variant="outline" className="w-full">
-                  Change Password
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="currentPassword">Current Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="currentPassword"
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={passwordData.currentPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                      placeholder="Enter your current password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showCurrentPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
 
-          <TabsContent value="preferences">
-            <Card>
-              <CardHeader>
-                <CardTitle>Preferences</CardTitle>
-                <CardDescription>
-                  Customize your application experience
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {/* Add preference settings here */}
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">New Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="newPassword"
+                      type={showNewPassword ? "text" : "password"}
+                      value={passwordData.newPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                      placeholder="Enter your new password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showNewPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={passwordData.confirmPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                      placeholder="Confirm your new password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <Button onClick={handlePasswordUpdate}>Update Password</Button>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-
-        <Dialog open={isCropperOpen} onOpenChange={setIsCropperOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Crop Profile Picture</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              {selectedImage && (
-                <ReactCrop
-                  crop={crop}
-                  onChange={(c) => setCrop(c)}
-                  aspect={1}
-                  circularCrop
-                >
-                  <img src={selectedImage} alt="Crop preview" />
-                </ReactCrop>
-              )}
-              <Button onClick={handleCropComplete}>Apply Crop</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </DashboardLayout>
   );
