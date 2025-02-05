@@ -75,26 +75,41 @@ const RoomOverview = () => {
         .eq("room_id", room.id);
 
       // Get activity logs for all items, including deleted ones
-      const { data: logs, error } = await supabase
+      const { data: logs, error: logsError } = await supabase
         .from("activity_logs")
-        .select(`
-          *,
-          profiles:user_id (
-            username,
-            avatar_url
-          )
-        `)
+        .select("*")
         .eq("entity_type", "item")
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching activity logs:", error);
-        throw error;
+      if (logsError) {
+        console.error("Error fetching activity logs:", logsError);
+        throw logsError;
       }
 
       // Filter logs to only include those related to this room's items
       const roomItemIds = new Set((allItems || []).map(item => item.id));
       const filteredLogs = logs?.filter(log => roomItemIds.has(log.entity_id)) || [];
+
+      // Fetch user profiles separately
+      const userIds = [...new Set(filteredLogs.map(log => log.user_id))].filter(Boolean);
+      
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, username, avatar_url")
+          .in("id", userIds);
+
+        if (profilesError) {
+          console.error("Error fetching profiles:", profilesError);
+          throw profilesError;
+        }
+
+        // Merge profiles with logs
+        return filteredLogs.map(log => ({
+          ...log,
+          profiles: profiles?.find(profile => profile.id === log.user_id)
+        }));
+      }
 
       return filteredLogs;
     },
