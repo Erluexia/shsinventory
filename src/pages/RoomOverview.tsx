@@ -68,13 +68,7 @@ const RoomOverview = () => {
 
       console.log("Fetching activity logs for room:", room.id);
       
-      // First, get all items that were ever in this room (including deleted ones)
-      const { data: allItems } = await supabase
-        .from("items")
-        .select("id")
-        .eq("room_id", room.id);
-
-      // Get activity logs for all items
+      // First, get all activity logs for items in this room
       const { data: logs, error: logsError } = await supabase
         .from("activity_logs")
         .select("*")
@@ -86,6 +80,12 @@ const RoomOverview = () => {
         throw logsError;
       }
 
+      // Get all items (including deleted ones) to filter logs
+      const { data: allItems } = await supabase
+        .from("items")
+        .select("id")
+        .eq("room_id", room.id);
+
       // Filter logs to only include those related to this room's items
       const roomItemIds = new Set((allItems || []).map(item => item.id));
       const filteredLogs = logs?.filter(log => roomItemIds.has(log.entity_id)) || [];
@@ -95,7 +95,7 @@ const RoomOverview = () => {
       
       if (userIds.length > 0) {
         try {
-          // Fetch profiles one by one to avoid IN clause issues
+          // Fetch profiles one by one
           const profiles = await Promise.all(
             userIds.map(async (userId) => {
               const { data, error } = await supabase
@@ -120,7 +120,6 @@ const RoomOverview = () => {
           }));
         } catch (error) {
           console.error("Error fetching profiles:", error);
-          // Return logs without profiles rather than failing completely
           return filteredLogs;
         }
       }

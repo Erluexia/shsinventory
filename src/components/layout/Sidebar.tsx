@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Home, LogOut, User, Menu } from "lucide-react";
 import {
   Sidebar,
@@ -17,8 +17,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "./UserProfile";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
-// Updated floors data to remove specific room numbers
 const floors = [
   {
     name: "First Floor",
@@ -54,6 +54,7 @@ const floors = [
 
 export function AppSidebar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [expandedFloor, setExpandedFloor] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -71,6 +72,9 @@ export function AppSidebar() {
     }
   };
 
+  const isCurrentRoute = (path: string) => location.pathname === path;
+  const isCurrentRoom = (roomNumber: string) => location.pathname === `/rooms/${roomNumber}`;
+
   const SidebarContents = () => (
     <>
       <div className="p-4">
@@ -86,6 +90,10 @@ export function AppSidebar() {
               <SidebarMenuButton
                 asChild
                 onClick={() => navigate("/dashboard")}
+                className={cn(
+                  "transition-colors duration-200 hover:bg-primary/10",
+                  isCurrentRoute("/dashboard") && "bg-primary/20"
+                )}
               >
                 <button className="w-full">
                   <Home className="w-4 h-4" />
@@ -107,6 +115,7 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   asChild
                   onClick={() => setExpandedFloor(expandedFloor === floor.id ? null : floor.id)}
+                  className="transition-colors duration-200 hover:bg-primary/10"
                 >
                   <button className="w-full">
                     <span>{floor.name}</span>
@@ -122,6 +131,10 @@ export function AppSidebar() {
                           navigate(`/rooms/${room}`);
                           setIsMobileOpen(false);
                         }}
+                        className={cn(
+                          "transition-colors duration-200 hover:bg-primary/10",
+                          isCurrentRoom(room) && "bg-primary/20"
+                        )}
                       >
                         <button className="w-full text-sm py-1">
                           Room {room}
@@ -142,6 +155,10 @@ export function AppSidebar() {
           <SidebarMenuButton
             asChild
             onClick={() => navigate("/account")}
+            className={cn(
+              "transition-colors duration-200 hover:bg-primary/10",
+              isCurrentRoute("/account") && "bg-primary/20"
+            )}
           >
             <button className="w-full flex items-center space-x-2">
               <User className="w-4 h-4" />
@@ -151,6 +168,7 @@ export function AppSidebar() {
           <SidebarMenuButton
             asChild
             onClick={handleLogout}
+            className="transition-colors duration-200 hover:bg-primary/10 hover:text-red-600"
           >
             <button className="w-full flex items-center space-x-2">
               <LogOut className="w-4 h-4" />
