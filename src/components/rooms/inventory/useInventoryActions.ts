@@ -125,7 +125,7 @@ export const useInventoryActions = (roomId: string) => {
           updated_at: new Date().toISOString()
         })
         .eq("id", itemId)
-        .eq("room_id", roomId); // Ensure the item belongs to the current room
+        .eq("room_id", roomId);
 
       if (error) {
         console.error("Error updating item:", error);
@@ -177,36 +177,45 @@ export const useInventoryActions = (roomId: string) => {
       }
 
       // Get item details before deletion for activity log
-      const { data: itemData } = await supabase
+      const { data: itemData, error: fetchError } = await supabase
         .from("items")
         .select("*")
         .eq("id", itemId)
-        .eq("room_id", roomId) // Ensure the item belongs to the current room
+        .eq("room_id", roomId)
         .single();
 
-      const { error } = await supabase
-        .from("items")
-        .delete()
-        .eq("id", itemId)
-        .eq("room_id", roomId); // Ensure the item belongs to the current room
-
-      if (error) {
-        console.error("Error deleting item:", error);
+      if (fetchError) {
+        console.error("Error fetching item details:", fetchError);
         toast({
           title: "Error",
-          description: error.message || "Failed to delete item",
+          description: "Failed to fetch item details",
           variant: "destructive",
         });
         return false;
       }
 
-      if (itemData) {
-        await createActivityLog(itemId, "deleted", {
-          name: itemData.name,
-          quantity: itemData.quantity,
-          maintenance_quantity: itemData.maintenance_quantity,
-          replacement_quantity: itemData.replacement_quantity
+      // Create activity log before deleting the item
+      await createActivityLog(itemId, "deleted", {
+        name: itemData.name,
+        quantity: itemData.quantity,
+        maintenance_quantity: itemData.maintenance_quantity,
+        replacement_quantity: itemData.replacement_quantity
+      });
+
+      const { error: deleteError } = await supabase
+        .from("items")
+        .delete()
+        .eq("id", itemId)
+        .eq("room_id", roomId);
+
+      if (deleteError) {
+        console.error("Error deleting item:", deleteError);
+        toast({
+          title: "Error",
+          description: deleteError.message || "Failed to delete item",
+          variant: "destructive",
         });
+        return false;
       }
 
       await refreshData();
