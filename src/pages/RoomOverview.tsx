@@ -62,7 +62,6 @@ const RoomOverview = () => {
     enabled: !!room?.id,
   });
 
-  // Modified activity logs query to track all items that were ever in this room
   const { data: activityLogs, isLoading: isLoadingLogs, error: logsError, refetch: refetchLogs } = useQuery({
     queryKey: ["activity-logs", room?.id],
     queryFn: async () => {
@@ -81,10 +80,23 @@ const RoomOverview = () => {
         throw itemsError;
       }
 
-      // Get all activity logs
+      // Get all activity logs with profiles
       const { data: logs, error: logsError } = await supabase
         .from("activity_logs")
-        .select("*, profiles(id, username, avatar_url)")
+        .select(`
+          id,
+          entity_type,
+          entity_id,
+          action,
+          details,
+          user_id,
+          created_at,
+          profiles (
+            id,
+            username,
+            avatar_url
+          )
+        `)
         .eq("entity_type", "item")
         .order("created_at", { ascending: false });
 
