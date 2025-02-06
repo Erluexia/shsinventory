@@ -61,6 +61,7 @@ const RoomOverview = () => {
     enabled: !!room?.id,
   });
 
+  // Modified activity logs query to track all items that were ever in this room
   const { data: activityLogs, isLoading: isLoadingLogs, error: logsError, refetch: refetchLogs } = useQuery({
     queryKey: ["activity-logs", room?.id],
     queryFn: async () => {
@@ -68,10 +69,21 @@ const RoomOverview = () => {
 
       console.log("Fetching activity logs for room:", room.id);
       
-      // First, get all activity logs for items
+      // First, get all items that were ever in this room (including deleted ones)
+      const { data: roomItems, error: itemsError } = await supabase
+        .from("items")
+        .select("id")
+        .eq("room_id", room.id);
+
+      if (itemsError) {
+        console.error("Error fetching room items:", itemsError);
+        throw itemsError;
+      }
+
+      // Get all activity logs
       const { data: logs, error: logsError } = await supabase
         .from("activity_logs")
-        .select("*")
+        .select("*, profiles(id, username, avatar_url)")
         .eq("entity_type", "item")
         .order("created_at", { ascending: false });
 
@@ -80,49 +92,19 @@ const RoomOverview = () => {
         throw logsError;
       }
 
-      // Get all items (including deleted ones) to filter logs
-      const { data: allItems } = await supabase
-        .from("items")
-        .select("id")
-        .eq("room_id", room.id);
+      // Create a Set of item IDs for efficient lookup
+      const roomItemIds = new Set(roomItems?.map(item => item.id) || []);
 
-      // Filter logs to only include those related to this room's items
-      const roomItemIds = new Set((allItems || []).map(item => item.id));
-      const filteredLogs = logs?.filter(log => roomItemIds.has(log.entity_id)) || [];
-
-      // Get unique user IDs from filtered logs
-      const userIds = [...new Set(filteredLogs.map(log => log.user_id))].filter(Boolean);
-      
-      if (userIds.length > 0) {
-        try {
-          // Fetch profiles one by one
-          const profiles = await Promise.all(
-            userIds.map(async (userId) => {
-              const { data, error } = await supabase
-                .from("profiles")
-                .select("id, username, avatar_url")
-                .eq("id", userId)
-                .single();
-              
-              if (error) {
-                console.error(`Error fetching profile for user ${userId}:`, error);
-                return null;
-              }
-              return data;
-            })
-          );
-
-          // Filter out null results and merge profiles with logs
-          const validProfiles = profiles.filter(Boolean);
-          return filteredLogs.map(log => ({
-            ...log,
-            profiles: validProfiles.find(profile => profile?.id === log.user_id)
-          }));
-        } catch (error) {
-          console.error("Error fetching profiles:", error);
-          return filteredLogs;
-        }
-      }
+      // Filter logs to include both current items and deleted items
+      const filteredLogs = logs?.filter(log => {
+        // Include logs for current items
+        if (roomItemIds.has(log.entity_id)) return true;
+        
+        // For deleted items, check if the log indicates this item was in this room
+        if (log.action === "deleted" && log.details?.room_id === room.id) return true;
+        
+        return false;
+      }) || [];
 
       return filteredLogs;
     },

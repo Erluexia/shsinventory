@@ -19,7 +19,7 @@ export const useInventoryActions = (roomId: string) => {
           entity_type: "item",
           entity_id: itemId,
           action,
-          details,
+          details: { ...details, room_id: roomId }, // Include room_id in details
           user_id: user.id
         });
 
@@ -81,7 +81,8 @@ export const useInventoryActions = (roomId: string) => {
         name: values.name,
         quantity: values.quantity,
         maintenance_quantity: values.maintenance_quantity || 0,
-        replacement_quantity: values.replacement_quantity || 0
+        replacement_quantity: values.replacement_quantity || 0,
+        room_id: roomId
       });
 
       await refreshData();
@@ -141,7 +142,8 @@ export const useInventoryActions = (roomId: string) => {
         name: values.name,
         quantity: values.quantity,
         maintenance_quantity: values.maintenance_quantity || 0,
-        replacement_quantity: values.replacement_quantity || 0
+        replacement_quantity: values.replacement_quantity || 0,
+        room_id: roomId
       });
 
       await refreshData();
@@ -199,7 +201,8 @@ export const useInventoryActions = (roomId: string) => {
         name: itemData.name,
         quantity: itemData.quantity,
         maintenance_quantity: itemData.maintenance_quantity,
-        replacement_quantity: itemData.replacement_quantity
+        replacement_quantity: itemData.replacement_quantity,
+        room_id: roomId
       });
 
       const { error: deleteError } = await supabase
