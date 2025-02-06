@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +8,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const passwordSchema = z.object({
   currentPassword: z.string().min(6, "Password must be at least 6 characters"),
@@ -18,6 +18,13 @@ const passwordSchema = z.object({
   message: "Passwords don't match",
   path: ["confirmPassword"],
 });
+
+const roles = [
+  { value: "admin", label: "Admin" },
+  { value: "faculty", label: "Faculty" },
+  { value: "it_office", label: "IT Office" },
+  { value: "property_custodian", label: "Property Custodian" }
+];
 
 export default function Account() {
   const [profileData, setProfileData] = useState({
@@ -75,7 +82,6 @@ export default function Account() {
 
       if (error) throw error;
 
-      // Clear password fields after successful update
       setPasswordData({
         currentPassword: "",
         newPassword: "",
@@ -100,55 +106,51 @@ export default function Account() {
       <div className="container mx-auto py-6">
         <h1 className="text-2xl font-bold mb-6">Account Settings</h1>
         
-        <Tabs defaultValue="profile" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
-          </TabsList>
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile Information</CardTitle>
+            <CardDescription>
+              Update your account settings
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                value={profileData.username}
+                onChange={(e) => setProfileData({ ...profileData, username: e.target.value })}
+                placeholder="Enter your username"
+              />
+            </div>
 
-          <TabsContent value="profile">
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>
-                  Update your profile information
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
-                  <Input
-                    id="username"
-                    value={profileData.username}
-                    onChange={(e) => setProfileData({ ...profileData, username: e.target.value })}
-                    placeholder="Enter your username"
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select
+                value={profileData.role}
+                onValueChange={(value) => setProfileData({ ...profileData, role: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((role) => (
+                    <SelectItem key={role.value} value={role.value}>
+                      {role.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Input
-                    id="role"
-                    value={profileData.role}
-                    onChange={(e) => setProfileData({ ...profileData, role: e.target.value })}
-                    placeholder="Enter your role"
-                  />
-                </div>
+            <Button onClick={handleProfileUpdate} className="w-full">
+              Save Profile Changes
+            </Button>
 
-                <Button onClick={handleProfileUpdate}>Save Changes</Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="security">
-            <Card>
-              <CardHeader>
-                <CardTitle>Change Password</CardTitle>
-                <CardDescription>
-                  Update your password
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-medium mb-4">Change Password</h3>
+              
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="currentPassword">Current Password</Label>
                   <div className="relative">
@@ -221,11 +223,13 @@ export default function Account() {
                   </div>
                 </div>
 
-                <Button onClick={handlePasswordUpdate}>Update Password</Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                <Button onClick={handlePasswordUpdate} className="w-full">
+                  Update Password
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
