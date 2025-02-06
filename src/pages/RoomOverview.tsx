@@ -9,6 +9,7 @@ import { useState } from "react";
 import { RoomInventoryTab } from "@/components/rooms/RoomInventoryTab";
 import { RoomActivityTab } from "@/components/rooms/RoomActivityTab";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ActivityLog } from "@/types/activity-logs";
 
 const RoomOverview = () => {
   const { roomId } = useParams();
@@ -96,7 +97,7 @@ const RoomOverview = () => {
       const roomItemIds = new Set(roomItems?.map(item => item.id) || []);
 
       // Filter logs to include both current items and deleted items
-      const filteredLogs = logs?.filter(log => {
+      const filteredLogs = (logs as ActivityLog[] | null)?.filter(log => {
         // Include logs for current items
         if (roomItemIds.has(log.entity_id)) return true;
         
