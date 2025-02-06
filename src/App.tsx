@@ -21,6 +21,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    let mounted = true;
+
     // Get initial session
     const getInitialSession = async () => {
       try {
@@ -32,7 +34,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
           throw error;
         }
         
-        setSession(session);
+        if (mounted) {
+          if (session) {
+            setSession(session);
+          } else {
+            navigate('/login');
+          }
+        }
       } catch (error: any) {
         console.error("Error getting session:", error);
         toast({
@@ -42,7 +50,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         });
         navigate('/login');
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -55,23 +65,26 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       console.log("Auth state change event:", event);
       console.log("New session state:", session);
 
-      if (event === 'TOKEN_REFRESHED') {
-        console.log('Token was refreshed successfully');
-      }
-
-      // Check for sign out event
       if (event === 'SIGNED_OUT') {
-        // Clear any application cache/state
-        queryClient.clear();
-        navigate('/login');
+        if (mounted) {
+          setSession(null);
+          queryClient.clear();
+          navigate('/login');
+        }
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (mounted) {
+          setSession(session);
+        }
       }
 
-      setSession(session);
-      setLoading(false);
+      if (mounted) {
+        setLoading(false);
+      }
     });
 
+    // Cleanup
     return () => {
-      console.log("Cleaning up auth subscription");
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [navigate, toast, queryClient]);
