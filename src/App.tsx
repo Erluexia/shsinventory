@@ -113,6 +113,8 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    let mounted = true;
+
     // Check session
     const checkSession = async () => {
       try {
@@ -120,15 +122,32 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
         console.log("Public route session check:", session);
         
         if (error) {
-          console.error("Session check error:", error);
-          throw error;
+          if (error.message.includes("refresh_token_not_found")) {
+            // This is an expected error when no session exists
+            console.log("No existing session found");
+          } else {
+            console.error("Session check error:", error);
+            throw error;
+          }
         }
         
-        setSession(session);
-      } catch (error) {
+        if (mounted) {
+          setSession(session);
+        }
+      } catch (error: any) {
         console.error("Error checking session:", error);
+        // Only show toast for unexpected errors
+        if (!error.message.includes("refresh_token_not_found")) {
+          toast({
+            variant: "destructive",
+            title: "Session Error",
+            description: "There was an error checking your session.",
+          });
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -136,11 +155,16 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Public route auth event:", event);
-      setSession(session);
-      setLoading(false);
+      if (mounted) {
+        setSession(session);
+        setLoading(false);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [toast]);
 
   if (loading) {

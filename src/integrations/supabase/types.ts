@@ -222,8 +222,22 @@ export type Database = {
             foreignKeyName: "rooms_floor_id_fkey"
             columns: ["floor_id"]
             isOneToOne: false
+            referencedRelation: "floor_statistics"
+            referencedColumns: ["floor_id"]
+          },
+          {
+            foreignKeyName: "rooms_floor_id_fkey"
+            columns: ["floor_id"]
+            isOneToOne: false
             referencedRelation: "floors"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valid_floor_number"
+            columns: ["floor_number"]
+            isOneToOne: false
+            referencedRelation: "floor_statistics"
+            referencedColumns: ["floor_number"]
           },
           {
             foreignKeyName: "valid_floor_number"
@@ -236,7 +250,27 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      floor_statistics: {
+        Row: {
+          floor_id: string | null
+          floor_name: string | null
+          floor_number: number | null
+          needs_maintenance: number | null
+          needs_replacement: number | null
+          room_count: number | null
+          total_items: number | null
+        }
+        Relationships: []
+      }
+      overall_statistics: {
+        Row: {
+          needs_maintenance: number | null
+          needs_replacement: number | null
+          total_items: number | null
+          total_rooms: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
