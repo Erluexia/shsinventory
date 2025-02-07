@@ -162,27 +162,6 @@ export type Database = {
           },
         ]
       }
-      overall_statistics: {
-        Row: {
-          needs_maintenance: number | null
-          needs_replacement: number | null
-          total_items: number | null
-          total_rooms: number | null
-        }
-        Insert: {
-          needs_maintenance?: number | null
-          needs_replacement?: number | null
-          total_items?: number | null
-          total_rooms?: number | null
-        }
-        Update: {
-          needs_maintenance?: number | null
-          needs_replacement?: number | null
-          total_items?: number | null
-          total_rooms?: number | null
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -290,6 +269,15 @@ export type Database = {
           needs_replacement: number | null
           room_count: number | null
           total_items: number | null
+        }
+        Relationships: []
+      }
+      overall_statistics: {
+        Row: {
+          needs_maintenance: number | null
+          needs_replacement: number | null
+          total_items: number | null
+          total_rooms: number | null
         }
         Relationships: []
       }

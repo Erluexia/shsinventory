@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card } from "@/components/ui/card";
@@ -86,14 +87,15 @@ export default function Dashboard() {
     },
   });
 
-  // Fetch overall metrics
+  // Fetch overall metrics from the view
   const { data: metrics, isLoading: isLoadingMetrics } = useQuery({
     queryKey: ['dashboard-metrics'],
     queryFn: async () => {
-      console.log('Fetching overall metrics...');
-      const { data: items, error } = await supabase
-        .from('items')
-        .select('quantity, maintenance_quantity, replacement_quantity');
+      console.log('Fetching overall metrics from view...');
+      const { data, error } = await supabase
+        .from('overall_statistics')
+        .select('*')
+        .single();
       
       if (error) {
         console.error('Error fetching metrics:', error);
@@ -101,20 +103,11 @@ export default function Dashboard() {
         throw error;
       }
 
-      const { data: roomCount, error: roomError } = await supabase
-        .from('rooms')
-        .select('id', { count: 'exact' });
-
-      if (roomError) {
-        console.error('Error fetching room count:', roomError);
-        throw roomError;
-      }
-
       return {
-        totalItems: items.reduce((sum, item) => sum + (item.quantity || 0), 0),
-        needsMaintenance: items.reduce((sum, item) => sum + (item.maintenance_quantity || 0), 0),
-        needsReplacement: items.reduce((sum, item) => sum + (item.replacement_quantity || 0), 0),
-        totalRooms: roomCount.length
+        totalItems: data.total_items || 0,
+        needsMaintenance: data.needs_maintenance || 0,
+        needsReplacement: data.needs_replacement || 0,
+        totalRooms: data.total_rooms || 0
       };
     },
   });
