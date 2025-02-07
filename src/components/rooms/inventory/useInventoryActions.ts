@@ -56,27 +56,42 @@ export const useInventoryActions = (roomId: string) => {
         return false;
       }
 
-      const { data: newItem, error } = await supabase
+      // Create new item record
+      const { data: newItem, error: createError } = await supabase
         .from("items")
         .insert({
-          ...values,
+          name: values.name,
+          quantity: values.quantity,
           room_id: roomId,
           created_by: session.session.user.id,
           maintenance_quantity: values.maintenance_quantity || 0,
-          replacement_quantity: values.replacement_quantity || 0
+          replacement_quantity: values.replacement_quantity || 0,
+          updated_at: new Date().toISOString()
         })
         .select()
         .single();
 
-      if (error) {
-        console.error("Error creating item:", error);
+      if (createError) {
+        console.error("Error creating item:", createError);
         toast({
           title: "Error",
-          description: error.message || "Failed to create item",
+          description: createError.message || "Failed to create item",
           variant: "destructive",
         });
         return false;
       }
+
+      if (!newItem) {
+        console.error("No item was created");
+        toast({
+          title: "Error",
+          description: "Failed to create item - no data returned",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      console.log("Successfully created item:", newItem);
 
       await createActivityLog(newItem.id, "created", {
         name: values.name,
