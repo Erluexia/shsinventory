@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,7 +20,7 @@ export const useInventoryActions = (roomId: string) => {
           entity_type: "item",
           entity_id: itemId,
           action,
-          details: { ...details, room_id: roomId }, // Include room_id in details
+          details: { ...details, room_id: roomId },
           user_id: user.id
         });
 
@@ -117,10 +118,29 @@ export const useInventoryActions = (roomId: string) => {
         return false;
       }
 
+      // First verify the item exists and belongs to the room
+      const { data: existingItem, error: fetchError } = await supabase
+        .from("items")
+        .select()
+        .eq("id", itemId)
+        .eq("room_id", roomId)
+        .single();
+
+      if (fetchError || !existingItem) {
+        console.error("Error fetching item:", fetchError);
+        toast({
+          title: "Error",
+          description: "Item not found or access denied",
+          variant: "destructive",
+        });
+        return false;
+      }
+
       const { error } = await supabase
         .from("items")
         .update({
-          ...values,
+          name: values.name,
+          quantity: values.quantity,
           maintenance_quantity: values.maintenance_quantity || 0,
           replacement_quantity: values.replacement_quantity || 0,
           updated_at: new Date().toISOString()
