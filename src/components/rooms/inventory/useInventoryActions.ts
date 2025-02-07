@@ -66,7 +66,6 @@ export const useInventoryActions = (roomId: string) => {
           created_by: session.session.user.id,
           maintenance_quantity: values.maintenance_quantity || 0,
           replacement_quantity: values.replacement_quantity || 0,
-          updated_at: new Date().toISOString()
         })
         .select()
         .single();
@@ -158,7 +157,6 @@ export const useInventoryActions = (roomId: string) => {
           quantity: values.quantity,
           maintenance_quantity: values.maintenance_quantity || 0,
           replacement_quantity: values.replacement_quantity || 0,
-          updated_at: new Date().toISOString()
         })
         .eq("id", itemId)
         .eq("room_id", roomId);
