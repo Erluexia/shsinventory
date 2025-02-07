@@ -162,6 +162,27 @@ export type Database = {
           },
         ]
       }
+      overall_statistics: {
+        Row: {
+          needs_maintenance: number | null
+          needs_replacement: number | null
+          total_items: number | null
+          total_rooms: number | null
+        }
+        Insert: {
+          needs_maintenance?: number | null
+          needs_replacement?: number | null
+          total_items?: number | null
+          total_rooms?: number | null
+        }
+        Update: {
+          needs_maintenance?: number | null
+          needs_replacement?: number | null
+          total_items?: number | null
+          total_rooms?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -194,6 +215,7 @@ export type Database = {
           id: string
           previous_status: string | null
           room_number: string
+          roomId: string | null
           status: string | null
           updated_at: string
         }
@@ -204,6 +226,7 @@ export type Database = {
           id?: string
           previous_status?: string | null
           room_number: string
+          roomId?: string | null
           status?: string | null
           updated_at?: string
         }
@@ -214,6 +237,7 @@ export type Database = {
           id?: string
           previous_status?: string | null
           room_number?: string
+          roomId?: string | null
           status?: string | null
           updated_at?: string
         }
@@ -230,6 +254,13 @@ export type Database = {
             columns: ["floor_id"]
             isOneToOne: false
             referencedRelation: "floors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rooms_roomId_fkey"
+            columns: ["roomId"]
+            isOneToOne: false
+            referencedRelation: "rooms"
             referencedColumns: ["id"]
           },
           {
@@ -259,15 +290,6 @@ export type Database = {
           needs_replacement: number | null
           room_count: number | null
           total_items: number | null
-        }
-        Relationships: []
-      }
-      overall_statistics: {
-        Row: {
-          needs_maintenance: number | null
-          needs_replacement: number | null
-          total_items: number | null
-          total_rooms: number | null
         }
         Relationships: []
       }
