@@ -44,7 +44,7 @@ export const useInventoryActions = (roomId: string) => {
 
   const handleCreateItem = async (values: any) => {
     try {
-      console.log("Creating item with values:", values);
+      console.log("Creating new item with values:", values);
       
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user) {
@@ -59,15 +59,15 @@ export const useInventoryActions = (roomId: string) => {
       // Create new item using INSERT
       const { data: newItem, error: createError } = await supabase
         .from("items")
-        .insert({
+        .insert([{  // Wrap the object in an array for .insert()
           name: values.name,
-          quantity: values.quantity,
+          quantity: values.quantity || 0,
           room_id: roomId,
           created_by: session.session.user.id,
           maintenance_quantity: values.maintenance_quantity || 0,
           replacement_quantity: values.replacement_quantity || 0,
-        })
-        .select()
+        }])
+        .select('*')
         .single();
 
       if (createError) {
@@ -94,7 +94,7 @@ export const useInventoryActions = (roomId: string) => {
 
       await createActivityLog(newItem.id, "created", {
         name: values.name,
-        quantity: values.quantity,
+        quantity: values.quantity || 0,
         maintenance_quantity: values.maintenance_quantity || 0,
         replacement_quantity: values.replacement_quantity || 0,
         room_id: roomId
