@@ -56,7 +56,7 @@ export const useInventoryActions = (roomId: string) => {
         return false;
       }
 
-      // Create new item record
+      // Create new item using INSERT
       const { data: newItem, error: createError } = await supabase
         .from("items")
         .insert({
@@ -150,6 +150,7 @@ export const useInventoryActions = (roomId: string) => {
         return false;
       }
 
+      // Update existing item
       const { error } = await supabase
         .from("items")
         .update({
