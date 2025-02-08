@@ -76,9 +76,9 @@ export type Database = {
           id: string
           item_id: string | null
           new_quantity: number | null
-          new_status: string | null
+          new_status: Database["public"]["Enums"]["item_status"] | null
           previous_quantity: number | null
-          previous_status: string | null
+          previous_status: Database["public"]["Enums"]["item_status"] | null
         }
         Insert: {
           changed_by?: string | null
@@ -87,9 +87,9 @@ export type Database = {
           id?: string
           item_id?: string | null
           new_quantity?: number | null
-          new_status?: string | null
+          new_status?: Database["public"]["Enums"]["item_status"] | null
           previous_quantity?: number | null
-          previous_status?: string | null
+          previous_status?: Database["public"]["Enums"]["item_status"] | null
         }
         Update: {
           changed_by?: string | null
@@ -98,11 +98,18 @@ export type Database = {
           id?: string
           item_id?: string | null
           new_quantity?: number | null
-          new_status?: string | null
+          new_status?: Database["public"]["Enums"]["item_status"] | null
           previous_quantity?: number | null
-          previous_status?: string | null
+          previous_status?: Database["public"]["Enums"]["item_status"] | null
         }
         Relationships: [
+          {
+            foreignKeyName: "item_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "item_history_item_id_fkey"
             columns: ["item_id"]
@@ -123,7 +130,7 @@ export type Database = {
           quantity: number
           replacement_quantity: number | null
           room_id: string | null
-          status: string | null
+          status: Database["public"]["Enums"]["item_status"] | null
           updated_at: string
         }
         Insert: {
@@ -136,7 +143,7 @@ export type Database = {
           quantity?: number
           replacement_quantity?: number | null
           room_id?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["item_status"] | null
           updated_at?: string
         }
         Update: {
@@ -149,10 +156,17 @@ export type Database = {
           quantity?: number
           replacement_quantity?: number | null
           room_id?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["item_status"] | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "items_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "items_room_id_fkey"
             columns: ["room_id"]
@@ -166,21 +180,21 @@ export type Database = {
         Row: {
           avatar_url: string | null
           id: string
-          role: string | null
+          role: Database["public"]["Enums"]["app_role"] | null
           updated_at: string
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
           id: string
-          role?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
           updated_at?: string
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
           id?: string
-          role?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
           updated_at?: string
           username?: string | null
         }
@@ -192,10 +206,9 @@ export type Database = {
           floor_id: string | null
           floor_number: number
           id: string
-          previous_status: string | null
+          previous_status: Database["public"]["Enums"]["room_status"] | null
           room_number: string
-          roomId: string | null
-          status: string | null
+          status: Database["public"]["Enums"]["room_status"] | null
           updated_at: string
         }
         Insert: {
@@ -203,10 +216,9 @@ export type Database = {
           floor_id?: string | null
           floor_number: number
           id?: string
-          previous_status?: string | null
+          previous_status?: Database["public"]["Enums"]["room_status"] | null
           room_number: string
-          roomId?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["room_status"] | null
           updated_at?: string
         }
         Update: {
@@ -214,10 +226,9 @@ export type Database = {
           floor_id?: string | null
           floor_number?: number
           id?: string
-          previous_status?: string | null
+          previous_status?: Database["public"]["Enums"]["room_status"] | null
           room_number?: string
-          roomId?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["room_status"] | null
           updated_at?: string
         }
         Relationships: [
@@ -234,27 +245,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "floors"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "rooms_roomId_fkey"
-            columns: ["roomId"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "valid_floor_number"
-            columns: ["floor_number"]
-            isOneToOne: false
-            referencedRelation: "floor_statistics"
-            referencedColumns: ["floor_number"]
-          },
-          {
-            foreignKeyName: "valid_floor_number"
-            columns: ["floor_number"]
-            isOneToOne: false
-            referencedRelation: "floors"
-            referencedColumns: ["floor_number"]
           },
         ]
       }
@@ -286,7 +276,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "faculty" | "it_office" | "property_custodian"
+      item_status: "good" | "needs_maintenance" | "needs_replacement"
+      room_status: "available" | "occupied" | "maintenance" | "inactive"
     }
     CompositeTypes: {
       [_ in never]: never
