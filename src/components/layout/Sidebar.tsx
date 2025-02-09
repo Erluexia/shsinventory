@@ -28,7 +28,7 @@ const floors = [
   {
     name: "Second Floor",
     id: "2",
-    rooms: Array.from({ length: 8 }, (_, i) => `20${i + 2}`),
+    rooms: Array.from({ length: 4 }, (_, i) => `20${i + 2}`), // Only rooms 202-205
   },
   {
     name: "Third Floor",
