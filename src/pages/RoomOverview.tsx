@@ -1,8 +1,9 @@
+
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useState } from "react";
@@ -10,10 +11,13 @@ import { RoomInventoryTab } from "@/components/rooms/RoomInventoryTab";
 import { RoomActivityTab } from "@/components/rooms/RoomActivityTab";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ActivityLog } from "@/types/activity-logs";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const RoomOverview = () => {
   const { roomId } = useParams();
   const [activeTab, setActiveTab] = useState("inventory");
+  const navigate = useNavigate();
 
   const { data: room, isLoading: isLoadingRoom, error: roomError } = useQuery({
     queryKey: ["room", roomId],
@@ -127,9 +131,12 @@ const RoomOverview = () => {
   if (isLoadingRoom) {
     return (
       <DashboardLayout>
-        <div className="p-4 space-y-4">
-          <Skeleton className="h-8 w-48" />
-          <div className="grid gap-4">
+        <div className="p-6 space-y-6">
+          <div className="flex items-center space-x-4">
+            <Skeleton className="h-10 w-10" />
+            <Skeleton className="h-8 w-48" />
+          </div>
+          <div className="grid gap-6">
             <Skeleton className="h-64 w-full" />
           </div>
         </div>
@@ -140,7 +147,7 @@ const RoomOverview = () => {
   if (roomError) {
     return (
       <DashboardLayout>
-        <div className="p-4">
+        <div className="p-6">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
@@ -156,7 +163,7 @@ const RoomOverview = () => {
   if (!room) {
     return (
       <DashboardLayout>
-        <div className="p-4">
+        <div className="p-6">
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Room Not Found</AlertTitle>
@@ -171,35 +178,64 @@ const RoomOverview = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-4">
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold">
-            Room {room.room_number} (Floor {room.floors?.floor_number})
-          </h1>
+      <div className="p-6 max-w-7xl mx-auto w-full">
+        <div className="mb-8">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-4"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold tracking-tight">
+              Room {room.room_number}
+            </h1>
+            <p className="text-muted-foreground">
+              Floor {room.floors?.floor_number}
+            </p>
+          </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="inventory">Inventory</TabsTrigger>
-            <TabsTrigger value="activity">Activity Log</TabsTrigger>
-          </TabsList>
+        <div className="bg-card rounded-lg border shadow-sm">
+          <Tabs 
+            value={activeTab} 
+            onValueChange={setActiveTab} 
+            className="w-full"
+          >
+            <div className="border-b px-4">
+              <TabsList className="justify-start -mb-px">
+                <TabsTrigger value="inventory" className="relative">
+                  Inventory
+                </TabsTrigger>
+                <TabsTrigger value="activity" className="relative">
+                  Activity Log
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-          <TabsContent value="inventory">
-            <RoomInventoryTab 
-              items={items || []} 
-              roomId={room.id} 
-              isLoading={isLoadingItems}
-            />
-          </TabsContent>
+            <div className="p-4">
+              <TabsContent value="inventory" className="mt-0">
+                <RoomInventoryTab 
+                  items={items || []} 
+                  roomId={room.id} 
+                  isLoading={isLoadingItems}
+                />
+              </TabsContent>
 
-          <TabsContent value="activity">
-            <RoomActivityTab 
-              activityLogs={activityLogs || []} 
-              isLoading={isLoadingLogs}
-              onRefresh={() => refetchLogs()}
-            />
-          </TabsContent>
-        </Tabs>
+              <TabsContent value="activity" className="mt-0">
+                <RoomActivityTab 
+                  activityLogs={activityLogs || []} 
+                  isLoading={isLoadingLogs}
+                  onRefresh={() => refetchLogs()}
+                />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
       </div>
     </DashboardLayout>
   );
