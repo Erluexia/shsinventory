@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, LogOut, User, Menu } from "lucide-react";
@@ -18,39 +19,18 @@ import { UserProfile } from "./UserProfile";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const floors = [
-  {
-    name: "First Floor",
-    id: "1",
-    rooms: Array.from({ length: 8 }, (_, i) => `10${i + 2}`),
-  },
-  {
-    name: "Second Floor",
-    id: "2",
-    rooms: Array.from({ length: 4 }, (_, i) => `20${i + 2}`), // Only rooms 202-205
-  },
-  {
-    name: "Third Floor",
-    id: "3",
-    rooms: Array.from({ length: 8 }, (_, i) => `30${i + 2}`),
-  },
-  {
-    name: "Fourth Floor",
-    id: "4",
-    rooms: Array.from({ length: 8 }, (_, i) => `40${i + 2}`),
-  },
-  {
-    name: "Fifth Floor",
-    id: "5",
-    rooms: Array.from({ length: 8 }, (_, i) => `50${i + 2}`),
-  },
-  {
-    name: "Sixth Floor",
-    id: "6",
-    rooms: Array.from({ length: 8 }, (_, i) => `60${i + 2}`),
-  },
-];
+interface Floor {
+  id: string;
+  name: string;
+  floor_number: number;
+  rooms: {
+    id: string;
+    room_number: string;
+  }[];
+}
 
 export function AppSidebar() {
   const navigate = useNavigate();
@@ -58,6 +38,32 @@ export function AppSidebar() {
   const { toast } = useToast();
   const [expandedFloor, setExpandedFloor] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const { data: floors, isLoading: isLoadingFloors } = useQuery({
+    queryKey: ["floors"],
+    queryFn: async () => {
+      console.log("Fetching floors and rooms data");
+      const { data: floorsData, error: floorsError } = await supabase
+        .from("floors")
+        .select(`
+          id,
+          name,
+          floor_number,
+          rooms (
+            id,
+            room_number
+          )
+        `)
+        .order("floor_number");
+
+      if (floorsError) {
+        console.error("Error fetching floors:", floorsError);
+        throw floorsError;
+      }
+
+      return floorsData as Floor[];
+    },
+  });
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -109,46 +115,54 @@ export function AppSidebar() {
       <SidebarGroup className="flex-1 overflow-y-auto">
         <SidebarGroupLabel>Floors</SidebarGroupLabel>
         <SidebarGroupContent>
-          <SidebarMenu>
-            {floors.map((floor) => (
-              <SidebarMenuItem key={floor.id}>
-                <SidebarMenuButton
-                  asChild
-                  onClick={() => setExpandedFloor(expandedFloor === floor.id ? null : floor.id)}
-                  className={cn(
-                    "transition-colors duration-200 hover:bg-primary/10",
-                    expandedFloor === floor.id && "bg-primary/5 font-medium"
+          {isLoadingFloors ? (
+            <div className="space-y-2 p-2">
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+            </div>
+          ) : (
+            <SidebarMenu>
+              {floors?.map((floor) => (
+                <SidebarMenuItem key={floor.id}>
+                  <SidebarMenuButton
+                    asChild
+                    onClick={() => setExpandedFloor(expandedFloor === floor.id ? null : floor.id)}
+                    className={cn(
+                      "transition-colors duration-200 hover:bg-primary/10",
+                      expandedFloor === floor.id && "bg-primary/5 font-medium"
+                    )}
+                  >
+                    <button className="w-full">
+                      <span>{floor.name}</span>
+                    </button>
+                  </SidebarMenuButton>
+                  {expandedFloor === floor.id && (
+                    <div className="ml-4 mt-2 space-y-1">
+                      {floor.rooms.map((room) => (
+                        <SidebarMenuButton
+                          key={room.id}
+                          asChild
+                          onClick={() => {
+                            navigate(`/rooms/${room.room_number}`);
+                            setIsMobileOpen(false);
+                          }}
+                          className={cn(
+                            "transition-colors duration-200 hover:bg-primary/10",
+                            isCurrentRoom(room.room_number) && "bg-primary/20 text-primary font-medium"
+                          )}
+                        >
+                          <button className="w-full text-sm py-1">
+                            Room {room.room_number}
+                          </button>
+                        </SidebarMenuButton>
+                      ))}
+                    </div>
                   )}
-                >
-                  <button className="w-full">
-                    <span>{floor.name}</span>
-                  </button>
-                </SidebarMenuButton>
-                {expandedFloor === floor.id && (
-                  <div className="ml-4 mt-2 space-y-1">
-                    {floor.rooms.map((room) => (
-                      <SidebarMenuButton
-                        key={room}
-                        asChild
-                        onClick={() => {
-                          navigate(`/rooms/${room}`);
-                          setIsMobileOpen(false);
-                        }}
-                        className={cn(
-                          "transition-colors duration-200 hover:bg-primary/10",
-                          isCurrentRoom(room) && "bg-primary/20 text-primary font-medium"
-                        )}
-                      >
-                        <button className="w-full text-sm py-1">
-                          Room {room}
-                        </button>
-                      </SidebarMenuButton>
-                    ))}
-                  </div>
-                )}
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          )}
         </SidebarGroupContent>
       </SidebarGroup>
 
