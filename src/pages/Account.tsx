@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Database } from "@/integrations/supabase/types";
+
+type AppRole = Database['public']['Enums']['app_role'];
 
 const passwordSchema = z.object({
   currentPassword: z.string().min(6, "Password must be at least 6 characters"),
@@ -24,10 +28,13 @@ const roles = [
   { value: "faculty", label: "Faculty" },
   { value: "it_office", label: "IT Office" },
   { value: "property_custodian", label: "Property Custodian" }
-];
+] as const;
 
 export default function Account() {
-  const [profileData, setProfileData] = useState({
+  const [profileData, setProfileData] = useState<{
+    username: string;
+    role: AppRole | "";
+  }>({
     username: "",
     role: "",
   });
@@ -45,6 +52,10 @@ export default function Account() {
 
   const handleProfileUpdate = async () => {
     try {
+      if (!profileData.role) {
+        throw new Error("Please select a role");
+      }
+
       const { error } = await supabase
         .from("profiles")
         .update({
