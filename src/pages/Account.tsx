@@ -139,7 +139,7 @@ export default function Account() {
               <Label htmlFor="role">Role</Label>
               <Select
                 value={profileData.role}
-                onValueChange={(value) => setProfileData({ ...profileData, role: value })}
+                onValueChange={(value: AppRole | "") => setProfileData({ ...profileData, role: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select your role" />
