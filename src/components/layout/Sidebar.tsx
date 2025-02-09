@@ -21,8 +21,10 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AddFloorDialog } from "./AddFloorDialog";
+import { AddRoomDialog } from "./AddRoomDialog";
 
-interface Floor {
+export interface Floor {
   id: string;
   name: string;
   floor_number: number;
@@ -111,6 +113,21 @@ export function AppSidebar() {
         </SidebarGroupContent>
       </SidebarGroup>
 
+      {/* Floors Management Group */}
+      <SidebarGroup>
+        <SidebarGroupLabel>Management</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <AddFloorDialog />
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <AddRoomDialog floors={floors || []} />
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+
       {/* Floors Group */}
       <SidebarGroup className="flex-1 overflow-y-auto">
         <SidebarGroupLabel>Floors</SidebarGroupLabel>
@@ -166,7 +183,7 @@ export function AppSidebar() {
         </SidebarGroupContent>
       </SidebarGroup>
 
-      {/* User Profile Section - Fixed at bottom */}
+      {/* User Profile Section */}
       <div className="mt-auto border-t p-4 bg-background">
         <div className="space-y-2">
           <SidebarMenuButton
